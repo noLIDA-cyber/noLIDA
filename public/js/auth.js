@@ -32,7 +32,7 @@ const initAuthPage = () => {
         localStorage.setItem('refreshToken', data.data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         showToast('Signed in with Google!', 'success');
-        navigate('/dashboard');
+        navigate('/');
       } catch (error) {
         showToast(error.message || 'Google sign-in failed', 'error');
       } finally {
@@ -53,7 +53,7 @@ const initAuthPage = () => {
         localStorage.setItem('refreshToken', data.data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         showToast('Signed in with Apple!', 'success');
-        navigate('/dashboard');
+        navigate('/');
       } catch (error) {
         showToast(error.message || 'Apple sign-in failed', 'error');
       } finally {

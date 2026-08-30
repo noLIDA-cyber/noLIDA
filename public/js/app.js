@@ -3,6 +3,7 @@ window.NOLIDA_FRONTEND_URL = 'http://localhost:3000';
 
 import { isAuthenticated, apiGet } from './api.js';
 import './modules/theme.js';
+import { logout } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.body.dataset.authenticated = isAuthenticated() ? 'true' : 'false';
