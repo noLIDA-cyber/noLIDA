@@ -169,6 +169,14 @@ app.get('/notifications', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/notifications.html'));
 });
 
+app.get('/settings/security', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/settings-security.html'));
+});
+
+app.get('/settings/payments', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/settings-payments.html'));
+});
+
 app.use(notFound);
 app.use(errorHandler);
 

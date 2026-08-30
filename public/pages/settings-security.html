@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — Security Settings</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="settings">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/settings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Back to Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 680px;">
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.5rem;">Security</h1>
+      <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">Manage your password and authentication settings.</p>
+
+      <div class="space-y-4">
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Password</h2>
+          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Change your account password.</p>
+          <form id="password-form">
+            <div class="form-group">
+              <label class="form-label form-label--required" for="current-password">Current Password</label>
+              <input type="password" id="current-password" name="currentPassword" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+            </div>
+            <div class="form-group">
+              <label class="form-label form-label--required" for="new-password">New Password</label>
+              <input type="password" id="new-password" name="newPassword" class="form-input" minlength="8" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+            </div>
+            <button type="submit" class="btn btn--primary btn--block">Update Password</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Two-Factor Authentication</h2>
+          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Add an extra layer of security to your account.</p>
+          <div class="flex items-center justify-between">
+            <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Enable 2FA</span>
+            <label class="theme-toggle-switch">
+              <input type="checkbox" id="2fa-toggle">
+              <span class="theme-toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Active Sessions</h2>
+          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Manage your logged-in devices.</p>
+          <div id="sessions-list">
+            <div class="loading-spinner" style="margin: 2rem auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { apiPost, apiGet, apiPatch, isAuthenticated } from '/js/api.js';
+    import { showToast } from '/js/app.js';
+
+    if (!isAuthenticated()) {
+      window.location.href = '/auth';
+    }
+
+    const passwordForm = document.getElementById('password-form');
+    if (passwordForm) {
+      passwordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(passwordForm);
+        const btn = passwordForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = 'Updating...';
+
+        try {
+          await apiPost('/auth/change-password', {
+            currentPassword: formData.get('currentPassword'),
+            newPassword: formData.get('newPassword'),
+          });
+          showToast('Password updated successfully', 'success');
+          passwordForm.reset();
+        } catch (error) {
+          showToast(error.message || 'Failed to update password', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'Update Password';
+        }
+      });
+    }
+
+    const sessionsList = document.getElementById('sessions-list');
+    if (sessionsList) {
+      apiGet('/auth/sessions')
+        .then(data => {
+          const sessions = data.data || [];
+          if (sessions.length === 0) {
+            sessionsList.innerHTML = '<p style="color: var(--theme-text-secondary); font-size: var(--text-sm);">No active sessions.</p>';
+            return;
+          }
+          sessionsList.innerHTML = sessions.map(s => `
+            <div class="card" style="padding: 1rem; border: 1px solid var(--theme-border); background: var(--theme-card-bg); margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <p style="font-weight: var(--weight-medium); color: var(--theme-text-primary); font-size: var(--text-sm);">${s.device_info?.browser || 'Browser'} on ${s.device_info?.os || 'Unknown OS'}</p>
+                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary);">${s.ip_address || 'Unknown IP'} · ${new Date(s.created_at).toLocaleDateString()}</p>
+                </div>
+                <button class="btn btn--ghost btn--sm revoke-session" data-id="${s.id}" style="color: var(--color-danger);">Revoke</button>
+              </div>
+            </div>
+          `).join('');
+
+          sessionsList.querySelectorAll('.revoke-session').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              try {
+                await apiDelete(`/auth/sessions/${btn.dataset.id}`);
+                showToast('Session revoked', 'success');
+                btn.closest('.card').remove();
+              } catch (error) {
+                showToast(error.message || 'Failed to revoke session', 'error');
+              }
+            });
+          });
+        })
+        .catch(() => {
+          sessionsList.innerHTML = '<p style="color: var(--theme-text-secondary);">Unable to load sessions.</p>';
+        });
+    }
+  </script>
+</body>
+</html>
