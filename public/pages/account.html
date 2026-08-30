@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — My Account</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="account">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/settings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 680px;">
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.5rem;">My Account</h1>
+      <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">Manage your personal information and preferences.</p>
+
+      <div class="space-y-4">
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Profile Information</h2>
+          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Update your personal details.</p>
+          <form id="profile-form">
+            <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="first-name">First Name</label>
+                <input type="text" id="first-name" name="firstName" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="last-name">Last Name</label>
+                <input type="text" id="last-name" name="lastName" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="display-name">Display Name</label>
+              <input type="text" id="display-name" name="displayName" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="bio">Bio</label>
+              <textarea id="bio" name="bio" rows="3" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);"></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block">Save Changes</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Contact Information</h2>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Email</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your login email</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-email">—</span>
+            </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Phone</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your phone number</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-phone">—</span>
+            </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0;">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Country</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your country</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-country">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Preferences</h2>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Language</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Display language</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-language">English</span>
+            </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Currency</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Preferred currency</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-currency">NGN</span>
+            </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0;">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Time Zone</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your local time zone</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-timezone">Africa/Lagos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { apiGet, apiPatch, isAuthenticated } from '/js/api.js';
+    import { showToast } from '/js/app.js';
+
+    if (!isAuthenticated()) {
+      window.location.href = '/auth';
+    }
+
+    const profileForm = document.getElementById('profile-form');
+    const accountEmail = document.getElementById('account-email');
+    const accountPhone = document.getElementById('account-phone');
+    const accountCountry = document.getElementById('account-country');
+    const accountLanguage = document.getElementById('account-language');
+    const accountCurrency = document.getElementById('account-currency');
+    const accountTimezone = document.getElementById('account-timezone');
+
+    const loadProfile = async () => {
+      try {
+        const data = await apiGet('/users/me');
+        const user = data.data;
+        if (!user) return;
+
+        if (document.getElementById('first-name')) document.getElementById('first-name').value = user.first_name || '';
+        if (document.getElementById('last-name')) document.getElementById('last-name').value = user.last_name || '';
+        if (document.getElementById('display-name')) document.getElementById('display-name').value = user.display_name || '';
+        if (document.getElementById('bio')) document.getElementById('bio').value = user.bio || '';
+        if (accountEmail) accountEmail.textContent = user.email || '—';
+        if (accountPhone) accountPhone.textContent = user.phone_verified ? 'Verified' : 'Not verified';
+        if (accountCountry) accountCountry.textContent = user.country || '—';
+        if (accountLanguage) accountLanguage.textContent = user.language || 'English';
+        if (accountCurrency) accountCurrency.textContent = user.currency || 'NGN';
+        if (accountTimezone) accountTimezone.textContent = user.timezone || 'Africa/Lagos';
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+      }
+    };
+
+    if (profileForm) {
+      profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(profileForm);
+        const btn = profileForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = 'Saving...';
+
+        try {
+          await apiPatch('/users/me', {
+            first_name: formData.get('firstName'),
+            last_name: formData.get('lastName'),
+            display_name: formData.get('displayName'),
+            bio: formData.get('bio'),
+          });
+          showToast('Profile updated successfully', 'success');
+        } catch (error) {
+          showToast(error.message || 'Failed to update profile', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'Save Changes';
+        }
+      });
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

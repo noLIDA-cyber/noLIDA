@@ -3,7 +3,6 @@ window.NOLIDA_FRONTEND_URL = 'http://localhost:3000';
 
 import { isAuthenticated, apiGet } from './api.js';
 import './modules/theme.js';
-import { logout } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.body.dataset.authenticated = isAuthenticated() ? 'true' : 'false';
@@ -178,8 +177,18 @@ document.addEventListener('keydown', (e) => {
 
 if (drawerLogout) {
   drawerLogout.addEventListener('click', async () => {
-    await logout();
-    closeDrawer();
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      showToast('You have been logged out', 'info');
+      closeDrawer();
+      window.location.href = '/auth';
+    }
   });
 }
 

@@ -165,6 +165,10 @@ app.get('/settings', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/settings.html'));
 });
 
+app.get('/account', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/account.html'));
+});
+
 app.get('/notifications', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/notifications.html'));
 });
