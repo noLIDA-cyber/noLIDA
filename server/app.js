@@ -29,6 +29,7 @@ const providerRoutes = require('./routes/provider');
 const requestRoutes = require('./routes/requests');
 const feeRoutes = require('./routes/fees');
 const notificationRoutes = require('./routes/notifications');
+const uploadRoutes = require('./routes/upload');
 
 require('./services/paymentGatewaySetup');
 
@@ -98,6 +99,7 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/provider`, providerRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/requests`, requestRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/fees`, feeRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/notifications`, notificationRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/upload`, uploadRoutes);
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/index.html'));
@@ -161,6 +163,10 @@ app.get('/verification', (req, res) => {
 
 app.get('/settings', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/settings.html'));
+});
+
+app.get('/notifications', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/notifications.html'));
 });
 
 app.use(notFound);
