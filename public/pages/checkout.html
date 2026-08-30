@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — Checkout</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="checkout">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+            <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/cart" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Cart</a>
+        <button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
+      </nav>
+    </div>
+    </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 800px;">
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.5rem;">Checkout</h1>
+      <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">Complete your payment securely.</p>
+
+      <div id="checkout-content">
+        <div class="loading-spinner" style="margin: 2rem auto;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { isAuthenticated, apiGet, apiPost } from '/js/api.js';
+    import { showToast } from '/js/app.js';
+
+    if (!isAuthenticated()) {
+      window.location.href = '/auth';
+    }
+
+    const container = document.getElementById('checkout-content');
+
+    const renderCheckout = (cart) => {
+      if (!cart.items || cart.items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state__icon">🛒</div>
+            <p class="empty-state__title">Your cart is empty</p>
+            <p class="empty-state__description">Add items to your cart before checking out.</p>
+            <a href="/search" class="btn btn--primary" style="margin-top: 1rem;">Explore Services</a>
+          </div>`;
+        return;
+      }
+
+      const total = cart.subtotal || 0;
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="card">
+            <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Order Summary</h2>
+            ${cart.items.map(item => `
+              <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+                <div>
+                  <p style="font-weight: var(--weight-medium); color: var(--theme-text-primary); margin: 0;">${item.listing_title || 'Item'}</p>
+                  <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">Qty: ${item.quantity}</p>
+                </div>
+                <span style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">${new Intl.NumberFormat('en-NG', { style: 'currency', currency: item.currency || 'NGN' }).format((item.unit_price || item.base_price || 0) * item.quantity)}</span>
+              </div>
+            `).join('')}
+            <div style="display: flex; justify-content: space-between; padding-top: 1rem; margin-top: 0.5rem;">
+              <span style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--theme-text-primary);">Total</span>
+              <span style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--theme-accent);">${new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(total)}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Payment</h2>
+            <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1rem;">Pay securely with Flutterwave. Card, bank transfer, and mobile money supported.</p>
+            <button id="pay-btn" class="btn btn--primary btn--block btn--lg">Pay Now</button>
+          </div>
+        </div>
+      `;
+
+      const payBtn = document.getElementById('pay-btn');
+      if (payBtn) {
+        payBtn.addEventListener('click', async () => {
+          payBtn.disabled = true;
+          payBtn.innerHTML = '<div class="loading-spinner" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Processing...';
+
+          try {
+            const response = await apiPost('/payments/initiate', {
+              amount: total,
+              currency: 'NGN',
+              provider: 'flutterwave',
+            });
+
+            if (response.data?.paymentLink) {
+              window.location.href = response.data.paymentLink;
+            } else {
+              showToast('Payment initiated. Complete the payment to confirm your order.', 'success');
+            }
+          } catch (err) {
+            showToast(err.message || 'Payment failed', 'error');
+            payBtn.disabled = false;
+            payBtn.innerHTML = 'Pay Now';
+          }
+        });
+      }
+    };
+
+    const loadCheckout = async () => {
+      container.innerHTML = '<div class="loading-spinner" style="margin: 2rem auto;"></div>';
+      try {
+        const data = await apiGet('/cart');
+        renderCheckout(data.data);
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
+      }
+    };
+
+    loadCheckout();
+  </script>
+</body>
+</html>

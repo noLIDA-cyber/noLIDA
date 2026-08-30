@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — Listing</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="listing">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+      
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/" class="btn btn--ghost" style="color: var(--theme-text-secondary); display: inline-flex; align-items: center; gap: 0.25rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+          Home
+        </a>
+        <a href="/auth" class="btn btn--primary btn--sm">Sign In</a>
+      </nav>
+    </div>
+    </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 800px;">
+      <div id="listing-details">
+        <div class="loading-spinner" style="margin: 3rem auto;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { apiGet } from '/js/api.js';
+
+    const container = document.getElementById('listing-details');
+    const pathParts = window.location.pathname.split('/');
+    const listingId = pathParts[pathParts.length - 1];
+
+    const renderListing = (listing) => {
+      if (!listing) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state__icon">😕</div>
+            <p class="empty-state__title">Listing not found</p>
+            <p class="empty-state__description">This listing may have been removed or is no longer active.</p>
+          </div>`;
+        return;
+      }
+
+      const priceDisplay = listing.pricing_type === 'fixed' && listing.base_price
+        ? `₦${Number(listing.base_price).toLocaleString()}`
+        : listing.pricing_type === 'range' && listing.min_price && listing.max_price
+        ? `₦${Number(listing.min_price).toLocaleString()} - ₦${Number(listing.max_price).toLocaleString()}`
+        : listing.pricing_type === 'hourly'
+        ? `₦${Number(listing.base_price).toLocaleString()} / hour`
+        : 'Contact for price';
+
+      container.innerHTML = `
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="avatar">${listing.business_name ? listing.business_name[0] : '?'}</div>
+            <div>
+              <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">${listing.title}</h1>
+              <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${listing.business_name || listing.provider_name || 'Independent Provider'} · ${listing.category_name || 'General'}</p>
+            </div>
+          </div>
+          <p style="color: var(--theme-text-secondary); line-height: var(--leading-relaxed); margin-bottom: 1.5rem;">${listing.description || 'No description provided.'}</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+            <span class="badge ${listing.verified ? 'badge--success' : 'badge--primary'}">${listing.verified ? 'Verified' : 'Unverified'}</span>
+            <span style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--theme-accent);">${priceDisplay}</span>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Availability</h2>
+          <div id="availability-list">
+            <p style="color: var(--theme-text-secondary);">Loading availability...</p>
+          </div>
+        </div>
+      `;
+
+      const availContainer = document.getElementById('availability-list');
+      if (listing.availability && listing.availability.length > 0) {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        availContainer.innerHTML = listing.availability.map(a => `
+          <div style="display: flex; justify-content: space-between; padding: 0.625rem 0; border-bottom: 1px solid var(--theme-border);">
+            <span style="color: var(--theme-text-primary); font-weight: var(--weight-medium);">${days[a.day_of_week] || 'Day ' + a.day_of_week}</span>
+            <span style="color: var(--theme-text-secondary);">${a.start_time || '--'} - ${a.end_time || '--'}</span>
+          </div>
+        `).join('');
+      } else {
+        availContainer.innerHTML = `<p style="color: var(--theme-text-secondary);">No availability set.</p>`;
+      }
+    };
+
+    apiGet(`/listings/${listingId}`)
+      .then(data => renderListing(data.data))
+      .catch(err => {
+        container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
+      });
+  </script>
+</body>
+</html>
+

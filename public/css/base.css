@@ -1,0 +1,120 @@
+@import './variables.css';
+@import './theme.css';
+@import './reset.css';
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--theme-bg-primary);
+  color: var(--theme-text-primary);
+  overflow-x: hidden;
+  word-break: break-word;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+*::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+input, button, textarea, select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+}
+
+.page {
+  flex: 1;
+  padding-top: var(--header-height);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-top: calc(var(--header-height) + 0.25rem);
+  }
+
+  [data-page="auth"] .page {
+    padding-top: 0;
+  }
+
+  [data-page="auth"] .page > div {
+    padding: 1rem !important;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--theme-skeleton-base) 25%, var(--theme-skeleton-highlight) 50%, var(--theme-skeleton-base) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-md);
+  color: transparent !important;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--theme-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--theme-text-tertiary);
+}
+
+.empty-state__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  margin-bottom: 0.5rem;
+  color: var(--theme-text-secondary);
+}
+
+.empty-state__description {
+  font-size: var(--text-base);
+  max-width: 400px;
+  margin: 0 auto;
+  color: var(--theme-text-tertiary);
+}
