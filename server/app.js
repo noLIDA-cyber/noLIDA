@@ -31,8 +31,6 @@ const feeRoutes = require('./routes/fees');
 
 require('./services/paymentGatewaySetup');
 
-const path = require('path');
-
 const app = express();
 
 app.use(helmet({
