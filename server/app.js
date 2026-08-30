@@ -172,15 +172,21 @@ const startServer = async () => {
   try {
     const { testConnection } = require('./config/database');
     await testConnection();
-    app.listen(PORT, () => {
-      console.log(`noLIDA server running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
-    });
+    console.log('Database connection successful');
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('Database connection failed:', error);
+    if (process.env.VERCEL !== '1') {
+      process.exit(1);
+    }
   }
 };
 
 startServer();
+
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`noLIDA server running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+  });
+}
 
 module.exports = app;
