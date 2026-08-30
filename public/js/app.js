@@ -207,16 +207,35 @@ const updateDrawerState = () => {
   }
 };
 
-const updateProfileAvatar = () => {
+const updateProfileAvatar = async () => {
   if (!profileIconDefault || !profileAvatar) return;
-  const user = getCurrentUser();
-  if (user && user.avatar_url) {
-    profileAvatar.src = user.avatar_url;
-    profileAvatar.style.display = 'block';
-    profileIconDefault.style.display = 'none';
-  } else {
-    profileAvatar.style.display = 'none';
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      profileIconDefault.style.display = 'block';
+      profileAvatar.style.display = 'none';
+      return;
+    }
+
+    const response = await fetch('/api/v1/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const avatarUrl = data.data?.avatar_url;
+      if (avatarUrl) {
+        profileAvatar.src = avatarUrl;
+        profileAvatar.style.display = 'block';
+        profileIconDefault.style.display = 'none';
+      } else {
+        profileIconDefault.style.display = 'block';
+        profileAvatar.style.display = 'none';
+      }
+    }
+  } catch (e) {
     profileIconDefault.style.display = 'block';
+    profileAvatar.style.display = 'none';
   }
 };
 
