@@ -15,8 +15,13 @@ const initAuthPage = () => {
       const eyeOpen = btn.querySelector('.eye-open');
       const eyeClosed = btn.querySelector('.eye-closed');
       if (eyeOpen && eyeClosed) {
-        eyeOpen.classList.toggle('hidden', !isPassword);
-        eyeClosed.classList.toggle('hidden', isPassword);
+        if (isPassword) {
+          eyeOpen.style.display = 'none';
+          eyeClosed.style.display = 'block';
+        } else {
+          eyeOpen.style.display = 'block';
+          eyeClosed.style.display = 'none';
+        }
       }
     });
   });

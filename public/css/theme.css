@@ -287,6 +287,21 @@ select:focus {
   color: #FCA5A5;
 }
 
+[data-theme="dark"] .badge--success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #6EE7B7;
+}
+
+[data-theme="dark"] .badge--warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #FCD34D;
+}
+
+[data-theme="dark"] .badge--danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #FCA5A5;
+}
+
 /* ========================================
    Alerts & Notifications
    ======================================== */
@@ -333,6 +348,24 @@ select:focus {
 }
 
 [data-theme="dark"] .alert-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #FCA5A5;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="dark"] .alert--success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #6EE7B7;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="dark"] .alert--warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #FCD34D;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="dark"] .alert--danger {
   background-color: rgba(239, 68, 68, 0.1);
   color: #FCA5A5;
   border-color: rgba(239, 68, 68, 0.25);
