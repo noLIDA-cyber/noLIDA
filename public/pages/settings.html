@@ -15,25 +15,18 @@
 <body data-page="settings">
   <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
     <div class="container flex items-center justify-between" style="height: 100%;">
-      <a href="/dashboard" class="flex items-center gap-2" style="text-decoration: none;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
         <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
         <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
       </a>
-      
-      <nav class="nav-links flex items-center gap-3">
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
         <a href="/" class="btn btn--ghost" style="color: var(--theme-text-secondary); display: inline-flex; align-items: center; gap: 0.25rem;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
           Home
         </a>
-        <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Bookings</a>
-        <a href="/cart" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Cart</a>
-        <a href="/reviews" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Reviews</a>
-        <a href="/disputes" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Disputes</a>
-        <a href="/verification" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Verification</a>
-        <button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
       </nav>
     </div>
-    </header>
+  </header>
 
   <main class="page">
     <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 680px;">
@@ -71,6 +64,12 @@
             </label>
           </div>
 
+          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--theme-border);">
+            <h3 style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 0.75rem;">App Theme</h3>
+            <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1rem;">Choose an accent theme. Premium themes are for subscribers only.</p>
+            <div id="accent-themes" class="accent-theme-grid"></div>
+          </div>
+
           <div id="theme-status" style="margin-top: 1rem; padding: 0.75rem 1rem; border-radius: var(--radius-lg); font-size: var(--text-sm); display: none;"></div>
         </div>
 
@@ -86,18 +85,66 @@
             </div>
             <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
               <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Phone</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your phone number</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="setting-phone">—</span>
+            </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Country</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your country</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="setting-country">—</span>
+            </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
+              <div>
                 <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Language</div>
                 <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Display language</div>
               </div>
-              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);">English</span>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="setting-language">English</span>
             </div>
-            <div class="flex items-center justify-between" style="padding: 0.75rem 0;">
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
               <div>
                 <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Currency</div>
                 <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Preferred currency</div>
               </div>
-              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);">NGN</span>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="setting-currency">NGN</span>
             </div>
+            <div class="flex items-center justify-between" style="padding: 0.75rem 0;">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Time Zone</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your local time zone</div>
+              </div>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="setting-timezone">Africa/Lagos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Security</h2>
+          <div class="space-y-3">
+            <a href="/settings/security" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">🔒 Password</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Change your password</div>
+              </div>
+              <span style="color: var(--theme-text-secondary);">→</span>
+            </a>
+            <a href="/settings/security" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">🛡️ Two-Factor Authentication</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Add an extra layer of security</div>
+              </div>
+              <span style="color: var(--theme-text-secondary);">→</span>
+            </a>
+            <a href="/settings/security" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
+              <div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">📱 Active Sessions</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Manage your logged-in devices</div>
+              </div>
+              <span style="color: var(--theme-text-secondary);">→</span>
+            </a>
           </div>
         </div>
 
@@ -125,34 +172,69 @@
                 <span class="theme-toggle-track"></span>
               </label>
             </div>
+            <div class="flex items-center justify-between">
+              <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Marketing notifications</span>
+              <label class="theme-toggle-switch">
+                <input type="checkbox">
+                <span class="theme-toggle-track"></span>
+              </label>
+            </div>
           </div>
         </div>
 
         <div class="card">
-          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Trust & Safety</h2>
-          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Manage your reviews, disputes, and verification status.</p>
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Payments</h2>
           <div class="space-y-3">
-            <a href="/reviews" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
+            <a href="/settings/payments" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
               <div>
-                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">⭐ Reviews</div>
-                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">View and manage your reviews</div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">💳 Payment Methods</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Manage your payment methods</div>
               </div>
               <span style="color: var(--theme-text-secondary);">→</span>
             </a>
-            <a href="/disputes" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
+            <a href="/settings/payments" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
               <div>
-                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">⚖️ Disputes</div>
-                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Open and track disputes</div>
+                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">📄 Transaction History</div>
+                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">View your past transactions</div>
               </div>
               <span style="color: var(--theme-text-secondary);">→</span>
             </a>
-            <a href="/verification" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; text-decoration: none; border: 1px solid var(--theme-border); background: var(--theme-card-bg);">
-              <div>
-                <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">🛡️ Verification</div>
-                <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Verify your identity and build trust</div>
-              </div>
-              <span style="color: var(--theme-text-secondary);">→</span>
-            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Privacy</h2>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Profile visibility</span>
+              <label class="theme-toggle-switch">
+                <input type="checkbox" checked>
+                <span class="theme-toggle-track"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Location permissions</span>
+              <label class="theme-toggle-switch">
+                <input type="checkbox" checked>
+                <span class="theme-toggle-track"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Personalization</span>
+              <label class="theme-toggle-switch">
+                <input type="checkbox">
+                <span class="theme-toggle-track"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Account Management</h2>
+          <div class="space-y-3">
+            <button class="btn btn--secondary btn--block" onclick="alert('Feature coming soon')">Export My Data</button>
+            <button class="btn btn--secondary btn--block" onclick="alert('Feature coming soon')">Deactivate Account</button>
+            <button class="btn btn--secondary btn--block" style="color: var(--color-danger); border-color: var(--color-danger);" onclick="alert('Feature coming soon')">Delete Account</button>
           </div>
         </div>
       </div>
@@ -162,8 +244,9 @@
   <script type="module" src="/js/app.js?v=16"></script>
   <script type="module">
     import { ThemeManager } from '/js/modules/theme.js';
-    import { apiPatch } from '/js/api.js';
+    import { apiPatch, apiGet } from '/js/api.js';
     import { getCurrentUser, isAuthenticated } from '/js/api.js';
+    import { showToast } from '/js/app.js';
 
     if (!isAuthenticated()) {
       window.location.href = '/auth';
@@ -201,7 +284,32 @@
         }
       });
     });
+
+    const accentContainer = document.getElementById('accent-themes');
+    const accents = ThemeManager.getAvailableAccents();
+    const currentAccent = ThemeManager.getAccent();
+
+    accentContainer.innerHTML = accents.map(a => `
+      <div class="accent-theme-card ${a.value === currentAccent ? 'active' : ''}" data-accent="${a.value}">
+        <div class="accent-theme-swatch" style="background: ${a.gradient};"></div>
+        <div class="accent-theme-name">${a.label}</div>
+        ${a.premium ? '<div class="accent-theme-badge">Premium</div>' : ''}
+      </div>
+    `).join('');
+
+    accentContainer.querySelectorAll('.accent-theme-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const accent = card.dataset.accent;
+        try {
+          await ThemeManager.setAccent(accent);
+          accentContainer.querySelectorAll('.accent-theme-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          showStatus('Accent theme updated', 'success');
+        } catch (error) {
+          showStatus('Failed to update accent theme', 'error');
+        }
+      });
+    });
   </script>
 </body>
 </html>
-
