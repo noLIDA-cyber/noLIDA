@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const { AppError } = require('../middleware/error');
 const { registerUser, authenticateUser, refreshAccessToken, createOTP, verifyOTP, changePassword } = require('../services/authService');
-const { generateTokens } = require('../utils/crypto');
+const { generateTokens, generateSecureToken } = require('../utils/crypto');
 const { sendSuccess, sendError } = require('../utils/response');
 const { authenticate } = require('../middleware/auth');
+const { createSession } = require('../services/sessionService');
 
 router.post('/register', async (req, res, next) => {
   try {
@@ -19,7 +20,9 @@ router.post('/register', async (req, res, next) => {
     const { sendVerificationEmail } = require('../services/notificationService');
     await sendVerificationEmail(user.email, otp, 'email_verification');
 
-    const tokens = generateTokens(user.id);
+    const jti = generateSecureToken(32);
+    const tokens = generateTokens(user.id, jti);
+    await createSession(user.id, { browser: req.headers['user-agent'], os: 'unknown' }, req.ip, jti);
 
     res.status(201).json({
       success: true,
@@ -43,6 +46,10 @@ router.post('/login', async (req, res, next) => {
     }
 
     const { user, tokens } = await authenticateUser(email, password);
+
+    const jti = generateSecureToken(32);
+    const deviceInfo = { browser: req.headers['user-agent'], os: 'unknown' };
+    await createSession(user.id, deviceInfo, req.ip, jti);
 
     res.json({
       success: true,

@@ -6,7 +6,8 @@ const { sendSuccess, sendError } = require('../../utils/response');
 
 router.delete('/', authenticate, async (req, res, next) => {
   try {
-    const result = await revokeAllSessions(req.user.id);
+    const excludeSessionId = req.user.jti || null;
+    const result = await revokeAllSessions(req.user.id, excludeSessionId);
     sendSuccess(res, result);
   } catch (error) {
     next(error);

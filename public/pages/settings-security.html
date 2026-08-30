@@ -50,12 +50,31 @@
         <div class="card">
           <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Two-Factor Authentication</h2>
           <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Add an extra layer of security to your account.</p>
-          <div class="flex items-center justify-between">
-            <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Enable 2FA</span>
-            <label class="theme-toggle-switch">
-              <input type="checkbox" id="2fa-toggle">
-              <span class="theme-toggle-track"></span>
-            </label>
+          <div id="2fa-section">
+            <div class="flex items-center justify-between">
+              <span style="color: var(--theme-text-primary); font-size: var(--text-sm);">Enable 2FA</span>
+              <label class="theme-toggle-switch">
+                <input type="checkbox" id="2fa-toggle">
+                <span class="theme-toggle-track"></span>
+              </label>
+            </div>
+            <div id="2fa-setup" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--theme-border);">
+              <div id="2fa-secret-display" style="background: var(--theme-bg-secondary); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-family: monospace; font-size: var(--text-lg); letter-spacing: 0.2em; text-align: center; word-break: break-all; color: var(--theme-text-primary);"></div>
+              <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1rem;">Enter the 6-digit code from your authenticator app to verify setup.</p>
+              <div class="form-group">
+                <label class="form-label" for="2fa-verify-code">Verification Code</label>
+                <input type="text" id="2fa-verify-code" class="form-input" placeholder="123456" maxlength="6" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <button id="2fa-verify-btn" class="btn btn--primary btn--block">Verify and Enable</button>
+            </div>
+            <div id="2fa-disable-section" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--theme-border);">
+              <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1rem;">Two-factor authentication is currently enabled. Enter your code to disable it.</p>
+              <div class="form-group">
+                <label class="form-label" for="2fa-disable-code">Current Code</label>
+                <input type="text" id="2fa-disable-code" class="form-input" placeholder="123456" maxlength="6" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <button id="2fa-disable-btn" class="btn btn--secondary btn--block" style="color: var(--color-danger); border-color: var(--color-danger);">Disable 2FA</button>
+            </div>
           </div>
         </div>
 
@@ -72,7 +91,7 @@
 
   <script type="module" src="/js/app.js?v=16"></script>
   <script type="module">
-    import { apiPost, apiGet, apiPatch, isAuthenticated } from '/js/api.js';
+    import { apiPost, apiGet, apiDelete, isAuthenticated } from '/js/api.js';
     import { showToast } from '/js/app.js';
 
     if (!isAuthenticated()) {
@@ -103,6 +122,111 @@
         }
       });
     }
+
+    const faToggle = document.getElementById('2fa-toggle');
+    const faSection = document.getElementById('2fa-section');
+    const faSetup = document.getElementById('2fa-setup');
+    const faDisableSection = document.getElementById('2fa-disable-section');
+    const faSecretDisplay = document.getElementById('2fa-secret-display');
+    const faVerifyBtn = document.getElementById('2fa-verify-btn');
+    const faVerifyCode = document.getElementById('2fa-verify-code');
+    const faDisableBtn = document.getElementById('2fa-disable-btn');
+    const faDisableCode = document.getElementById('2fa-disable-code');
+
+    const load2FAStatus = async () => {
+      if (!faToggle) return;
+      try {
+        const data = await apiGet('/auth/2fa-status');
+        const enabled = data.data?.enabled || false;
+        faToggle.checked = enabled;
+        if (enabled) {
+          faSetup.style.display = 'none';
+          faDisableSection.style.display = 'block';
+        } else {
+          faSetup.style.display = 'none';
+          faDisableSection.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Failed to load 2FA status:', error);
+      }
+    };
+
+    if (faToggle) {
+      faToggle.addEventListener('change', async () => {
+        if (faToggle.checked) {
+          try {
+            const data = await apiPost('/auth/enable-2fa');
+            const secret = data.data?.secret;
+            if (secret) {
+              faSecretDisplay.textContent = secret;
+              faSetup.style.display = 'block';
+              faDisableSection.style.display = 'none';
+            }
+          } catch (error) {
+            showToast(error.message || 'Failed to enable 2FA', 'error');
+            faToggle.checked = false;
+          }
+        } else {
+          faSetup.style.display = 'none';
+          faDisableSection.style.display = 'none';
+        }
+      });
+    }
+
+    if (faVerifyBtn) {
+      faVerifyBtn.addEventListener('click', async () => {
+        const code = faVerifyCode?.value?.trim();
+        if (!code || code.length !== 6) {
+          showToast('Please enter a valid 6-digit code', 'error');
+          return;
+        }
+
+        faVerifyBtn.disabled = true;
+        faVerifyBtn.innerHTML = 'Verifying...';
+
+        try {
+          await apiPost('/auth/verify-2fa', { code });
+          showToast('2FA enabled successfully', 'success');
+          faSetup.style.display = 'none';
+          faDisableSection.style.display = 'block';
+          faToggle.checked = true;
+        } catch (error) {
+          showToast(error.message || 'Invalid code', 'error');
+        } finally {
+          faVerifyBtn.disabled = false;
+          faVerifyBtn.innerHTML = 'Verify and Enable';
+        }
+      });
+    }
+
+    if (faDisableBtn) {
+      faDisableBtn.addEventListener('click', async () => {
+        const code = faDisableCode?.value?.trim();
+        if (!code || code.length !== 6) {
+          showToast('Please enter a valid 6-digit code', 'error');
+          return;
+        }
+
+        faDisableBtn.disabled = true;
+        faDisableBtn.innerHTML = 'Disabling...';
+
+        try {
+          await apiPost('/auth/verify-2fa', { code });
+          await apiPost('/auth/disable-2fa');
+          showToast('2FA disabled successfully', 'success');
+          faDisableSection.style.display = 'none';
+          faToggle.checked = false;
+          faDisableCode.value = '';
+        } catch (error) {
+          showToast(error.message || 'Invalid code', 'error');
+        } finally {
+          faDisableBtn.disabled = false;
+          faDisableBtn.innerHTML = 'Disable 2FA';
+        }
+      });
+    }
+
+    load2FAStatus();
 
     const sessionsList = document.getElementById('sessions-list');
     if (sessionsList) {

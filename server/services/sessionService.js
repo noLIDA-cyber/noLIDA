@@ -3,13 +3,13 @@ const { AppError } = require('../middleware/error');
 const { generateSecureToken } = require('../utils/crypto');
 const env = require('../config/env');
 
-const createSession = async (userId, deviceInfo, ipAddress) => {
+const createSession = async (userId, deviceInfo, ipAddress, tokenId) => {
   const tokenHash = generateSecureToken(64);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   const result = await query(
-    'INSERT INTO sessions (user_id, token_hash, device_info, ip_address, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, user_id, device_info, ip_address, expires_at, created_at',
-    [userId, tokenHash, JSON.stringify(deviceInfo || {}), ipAddress || null, expiresAt]
+    'INSERT INTO sessions (user_id, token_hash, token_id, device_info, ip_address, expires_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, device_info, ip_address, expires_at, created_at',
+    [userId, tokenHash, tokenId || null, JSON.stringify(deviceInfo || {}), ipAddress || null, expiresAt]
   );
 
   return result.rows[0];
@@ -17,7 +17,7 @@ const createSession = async (userId, deviceInfo, ipAddress) => {
 
 const getSessions = async (userId) => {
   const result = await query(
-    'SELECT id, device_info, ip_address, expires_at, revoked, created_at FROM sessions WHERE user_id = $1 ORDER BY created_at DESC',
+    'SELECT id, token_id, device_info, ip_address, expires_at, revoked, created_at FROM sessions WHERE user_id = $1 ORDER BY created_at DESC',
     [userId]
   );
 
@@ -37,19 +37,24 @@ const revokeSession = async (userId, sessionId) => {
   return { message: 'Session revoked successfully' };
 };
 
-const revokeAllSessions = async (userId) => {
-  await query(
-    'UPDATE sessions SET revoked = TRUE, updated_at = NOW() WHERE user_id = $1 AND revoked = FALSE',
-    [userId]
-  );
+const revokeAllSessions = async (userId, excludeSessionId = null) => {
+  let sql = 'UPDATE sessions SET revoked = TRUE, updated_at = NOW() WHERE user_id = $1 AND revoked = FALSE';
+  const params = [userId];
+
+  if (excludeSessionId) {
+    sql += ` AND id != $${params.length + 1}`;
+    params.push(excludeSessionId);
+  }
+
+  await query(sql, params);
 
   return { message: 'All sessions revoked successfully' };
 };
 
-const validateSession = async (tokenHash) => {
+const validateSession = async (tokenId) => {
   const result = await query(
-    'SELECT s.id, s.user_id, s.expires_at, s.revoked, u.email, u.status FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1',
-    [tokenHash]
+    'SELECT s.id, s.user_id, s.expires_at, s.revoked, u.email, u.status FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_id = $1',
+    [tokenId]
   );
 
   if (result.rows.length === 0) {

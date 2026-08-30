@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 const env = require('../config/env');
 const { AppError } = require('./error');
+const { validateSession } = require('../services/sessionService');
 
 const authenticate = async (req, res, next) => {
   try {
@@ -13,6 +14,10 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, env.jwt.accessSecret);
 
+    if (decoded.jti) {
+      await validateSession(decoded.jti);
+    }
+
     const result = await query(
       'SELECT id, email, email_verified, phone_verified, status FROM users WHERE id = $1 AND status = $2',
       [decoded.userId, 'active']
@@ -22,7 +27,7 @@ const authenticate = async (req, res, next) => {
       throw new AppError('Invalid token', 401);
     }
 
-    req.user = result.rows[0];
+    req.user = { ...result.rows[0], jti: decoded.jti || null };
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

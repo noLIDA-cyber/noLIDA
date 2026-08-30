@@ -2,8 +2,11 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const env = require('../config/env');
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, env.jwt.accessSecret, {
+const generateTokens = (userId, jti) => {
+  const payload = { userId };
+  if (jti) payload.jti = jti;
+
+  const accessToken = jwt.sign(payload, env.jwt.accessSecret, {
     expiresIn: env.jwt.accessExpiry,
   });
 
