@@ -29,6 +29,8 @@ const auditRoutes = require('./routes/audit');
 const providerRoutes = require('./routes/provider');
 const analyticsRoutes = require('./routes/analytics');
 const customerRoutes = require('./routes/customers');
+const webhookRoutes = require('./routes/webhooks');
+const payoutRoutes = require('./routes/payouts');
 const requestRoutes = require('./routes/requests');
 const feeRoutes = require('./routes/fees');
 const notificationRoutes = require('./routes/notifications');
@@ -70,6 +72,8 @@ app.use(express.static(path.join(__dirname, '..', 'public'), {
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+app.use('/api/webhooks', webhookRoutes);
+
 app.use(generalLimiter);
 
 app.use(`/api/${process.env.API_VERSION || 'v1'}/health`, healthRoutes);
@@ -104,6 +108,7 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/audit`, auditRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/provider`, providerRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/analytics`, analyticsRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/customers`, customerRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/payouts`, payoutRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/requests`, requestRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/fees`, feeRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/notifications`, notificationRoutes);
@@ -147,6 +152,10 @@ app.get('/admin', (req, res) => {
 
 app.get('/provider', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/provider.html'));
+});
+
+app.get('/orders', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/orders.html'));
 });
 
 app.get('/customers', (req, res) => {

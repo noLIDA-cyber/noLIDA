@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (page === 'admin') {
-    import('./modules/admin.js').then(m => m.initAdmin()).catch(err => console.error('Admin module failed:', err));
+    import('./modules/admin.js').then(m => m.initAdminPage()).catch(err => console.error('Admin module failed:', err));
   }
 
   if (page === 'settings') {

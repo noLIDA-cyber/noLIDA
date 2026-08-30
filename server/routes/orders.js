@@ -49,4 +49,43 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
   }
 });
 
+router.get('/:id/receipt', authenticate, async (req, res, next) => {
+  try {
+    const order = await getOrder(req.params.id, req.user.id);
+
+    const payment = await query(
+      'SELECT * FROM payments WHERE transaction_id = $1 ORDER BY created_at DESC LIMIT 1',
+      [order.id]
+    );
+
+    const receipt = {
+      receipt_number: `RCP-${order.id}-${Date.now().toString(36).toUpperCase()}`,
+      order_id: order.id,
+      transaction_status: order.transaction_status,
+      customer_id: order.customer_id,
+      provider_id: order.provider_id,
+      listing_title: order.listing_title,
+      category_name: order.category_name,
+      currency: order.currency || 'NGN',
+      subtotal: parseFloat(order.subtotal || 0),
+      tax_amount: parseFloat(order.tax_amount || 0),
+      discount_amount: parseFloat(order.discount_amount || 0),
+      customer_fee: parseFloat(order.customer_fee || 0),
+      provider_commission: parseFloat(order.provider_commission || 0),
+      platform_fee: parseFloat(order.platform_fee || 0),
+      processing_fee: parseFloat(order.processing_fee || 0),
+      total_amount: parseFloat(order.total_amount || 0),
+      provider_earnings: parseFloat(order.provider_earnings || 0),
+      payment_status: payment.rows.length > 0 ? payment.rows[0].status : 'pending',
+      payment_method: payment.rows.length > 0 ? payment.rows[0].payment_method : null,
+      created_at: order.created_at,
+      fee_snapshot: order.fee_snapshot || {},
+    };
+
+    sendSuccess(res, receipt);
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

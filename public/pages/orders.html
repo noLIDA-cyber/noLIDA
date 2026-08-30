@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — My Orders</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="orders">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Bookings</a>
+        <button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.5rem;">My Orders</h1>
+      <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">Track and manage your orders.</p>
+
+      <div id="orders-list">
+        <div class="loading-spinner" style="margin: 2rem auto;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { apiGet, isAuthenticated } from '/js/api.js';
+
+    const showToast = (message, type = 'info', duration = 3000) => {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 1rem; right: 1rem; z-index: 400; display: flex; flex-direction: column; gap: 0.5rem;';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'card';
+      const borderColor = type === 'error' ? 'var(--color-danger)' : type === 'success' ? 'var(--color-success)' : 'var(--color-accent)';
+      toast.style.cssText = `padding: 0.75rem 1rem; border-left: 4px solid ${borderColor}; box-shadow: var(--shadow-md); font-size: var(--text-sm); color: var(--theme-text-primary);`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    };
+
+    const formatCurrency = (amount) => `₦${Number(amount || 0).toLocaleString()}`;
+    const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    if (!isAuthenticated()) {
+      window.location.href = '/auth';
+    }
+
+    const container = document.getElementById('orders-list');
+
+    const loadOrders = async () => {
+      try {
+        const data = await apiGet('/orders?role=customer&limit=50');
+        const orders = data.data || [];
+
+        if (orders.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state__icon">📦</div>
+              <p class="empty-state__title">No orders yet</p>
+              <p class="empty-state__description">Your orders will appear here after purchase.</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--theme-border);">
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Order</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Date</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Status</th>
+                  <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Total</th>
+                  <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders.map(o => `
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">Order #${o.id}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${formatDate(o.created_at)}</td>
+                    <td style="padding: 0.75rem;">
+                      <span class="badge" style="background: ${o.transaction_status === 'completed' ? 'var(--color-success)' : o.transaction_status === 'pending' ? 'var(--color-warning)' : 'var(--color-accent)'}20; color: ${o.transaction_status === 'completed' ? 'var(--color-success)' : o.transaction_status === 'pending' ? 'var(--color-warning)' : 'var(--color-accent)'};">${o.transaction_status}</span>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">${formatCurrency(o.total_amount)}</td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                      <button class="btn btn--ghost btn--sm view-receipt" data-id="${o.id}">Receipt</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        container.querySelectorAll('.view-receipt').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              const receiptData = await apiGet(`/orders/${btn.dataset.id}`);
+              alert(`Receipt for Order #${receiptData.data.id}\n\nAmount: ${formatCurrency(receiptData.data.total_amount)}\nStatus: ${receiptData.data.transaction_status}\nDate: ${formatDate(receiptData.data.created_at)}`);
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
+          });
+        });
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
+      }
+    };
+
+    loadOrders();
+  </script>
+</body>
+</html>

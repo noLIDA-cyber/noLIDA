@@ -1,13 +1,12 @@
 const router = require('express').Router();
-const { query } = require('../config/database');
-const { authenticate } = require('../middleware/auth');
-const { AppError } = require('../middleware/error');
-const { sendSuccess, sendError } = require('../utils/response');
+const { authenticate, authorize } = require('../middleware/auth');
+const { listCategories, getCategory, createCategory, updateCategory, deleteCategory, listCapabilities, getCapability, createCapability, updateCapability, deleteCapability } = require('../services/categoryService');
+const { sendSuccess } = require('../utils/response');
 
 router.get('/', async (req, res, next) => {
   try {
-    const result = await query('SELECT * FROM categories WHERE active = TRUE ORDER BY sort_order, name');
-    sendSuccess(res, result.rows);
+    const categories = await listCategories(req.query);
+    sendSuccess(res, categories);
   } catch (error) {
     next(error);
   }
@@ -15,11 +14,8 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const result = await query('SELECT * FROM categories WHERE id = $1 AND active = TRUE', [req.params.id]);
-    if (result.rows.length === 0) {
-      throw new AppError('Category not found', 404);
-    }
-    sendSuccess(res, result.rows[0]);
+    const category = await getCategory(req.params.id);
+    sendSuccess(res, category);
   } catch (error) {
     next(error);
   }
@@ -27,11 +23,62 @@ router.get('/:id', async (req, res, next) => {
 
 router.get('/:id/capabilities', async (req, res, next) => {
   try {
-    const result = await query(
-      'SELECT * FROM capabilities WHERE category_id = $1 AND active = TRUE ORDER BY name',
-      [req.params.id]
-    );
-    sendSuccess(res, result.rows);
+    const capabilities = await listCapabilities(req.params.id);
+    sendSuccess(res, capabilities);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/', authenticate, authorize('super_admin', 'admin'), async (req, res, next) => {
+  try {
+    const category = await createCategory(req.body);
+    sendSuccess(res, category, 201);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:id', authenticate, authorize('super_admin', 'admin'), async (req, res, next) => {
+  try {
+    const category = await updateCategory(req.params.id, req.body);
+    sendSuccess(res, category);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:id', authenticate, authorize('super_admin', 'admin'), async (req, res, next) => {
+  try {
+    const result = await deleteCategory(req.params.id);
+    sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/capabilities', authenticate, authorize('super_admin', 'admin'), async (req, res, next) => {
+  try {
+    const capability = await createCapability(req.body);
+    sendSuccess(res, capability, 201);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/capabilities/:id', authenticate, authorize('super_admin', 'admin'), async (req, res, next) => {
+  try {
+    const capability = await updateCapability(req.params.id, req.body);
+    sendSuccess(res, capability);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/capabilities/:id', authenticate, authorize('super_admin', 'admin'), async (req, res, next) => {
+  try {
+    const result = await deleteCapability(req.params.id);
+    sendSuccess(res, result);
   } catch (error) {
     next(error);
   }

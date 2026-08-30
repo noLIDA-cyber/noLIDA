@@ -1,58 +1,39 @@
 const router = require('express').Router();
 const { authenticate } = require('../middleware/auth');
-const { query } = require('../config/database');
+const { getProviderProfile, updateProviderProfile, getProviderStats } = require('../services/providerService');
+const { listListings } = require('../services/listingService');
+const { listBookings, getAvailableSlots, getProviderAvailableDates } = require('../services/bookingService');
 const { AppError } = require('../middleware/error');
-const { sendSuccess, sendError } = require('../utils/response');
+const { sendSuccess } = require('../utils/response');
+
+router.get('/profile', authenticate, async (req, res, next) => {
+  try {
+    const profile = await getProviderProfile(req.user.id);
+    sendSuccess(res, profile);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/profile', authenticate, async (req, res, next) => {
+  try {
+    const profile = await updateProviderProfile(req.user.id, req.body);
+    sendSuccess(res, profile);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get('/dashboard', authenticate, async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const stats = await getProviderStats(req.user.id);
+    const bookings = await listBookings(req.user.id, 'provider', 1, 20, { status: 'confirmed' });
+    const upcomingBookings = bookings.data.filter(b => ['confirmed', 'in_progress'].includes(b.transaction_status) && b.booking_date >= new Date().toISOString().split('T')[0]);
 
-    const bookingsResult = await query(
-      `SELECT COUNT(*) as total, 
-              COUNT(CASE WHEN transaction_status = 'confirmed' THEN 1 END) as confirmed,
-              COUNT(CASE WHEN transaction_status = 'completed' THEN 1 END) as completed,
-              SUM(total_amount) as revenue
-       FROM transactions 
-       WHERE provider_id = $1 AND transaction_type = 'appointment' AND created_at >= NOW() - INTERVAL '30 days'`,
-      [userId]
-    );
-
-    const listingsResult = await query(
-      'SELECT COUNT(*) as total FROM listings WHERE provider_id = $1 AND status = $2',
-      [userId, 'active']
-    );
-
-    const reviewsResult = await query(
-      `SELECT COUNT(*) as total, AVG(rating) as avg_rating 
-       FROM reviews 
-       WHERE provider_id = $1 AND created_at >= NOW() - INTERVAL '30 days'`,
-      [userId]
-    );
-
-    const upcomingBookings = await query(
-      `SELECT t.*, l.title as listing_title, c.name as category_name,
-              p.display_name as customer_name
-       FROM transactions t
-       JOIN listings l ON l.id = t.listing_id
-       JOIN categories c ON c.id = l.category_id
-       LEFT JOIN profiles p ON p.user_id = t.customer_id
-       WHERE t.provider_id = $1 AND t.transaction_type = 'appointment' 
-             AND t.transaction_status IN ('confirmed', 'in_progress')
-             AND t.booking_date >= CURRENT_DATE
-       ORDER BY t.booking_date ASC, t.start_time ASC
-       LIMIT 10`,
-      [userId]
-    );
-
-    const stats = {
-      bookings: bookingsResult.rows[0],
-      listings: listingsResult.rows[0],
-      reviews: reviewsResult.rows[0],
-      upcomingBookings: upcomingBookings.rows,
-    };
-
-    sendSuccess(res, stats);
+    sendSuccess(res, {
+      ...stats,
+      upcomingBookings: upcomingBookings.slice(0, 10),
+    });
   } catch (error) {
     next(error);
   }
@@ -60,18 +41,8 @@ router.get('/dashboard', authenticate, async (req, res, next) => {
 
 router.get('/listings', authenticate, async (req, res, next) => {
   try {
-    const result = await query(
-      `SELECT l.*, c.name as category_name,
-              lp.pricing_type, lp.base_price, lp.currency
-       FROM listings l
-       JOIN categories c ON c.id = l.category_id
-       LEFT JOIN listing_pricing lp ON lp.listing_id = l.id
-       WHERE l.provider_id = $1
-       ORDER BY l.created_at DESC`,
-      [req.user.id]
-    );
-
-    sendSuccess(res, result.rows);
+    const result = await listListings({ providerId: req.user.id, limit: 100 });
+    sendSuccess(res, result.data);
   } catch (error) {
     next(error);
   }
