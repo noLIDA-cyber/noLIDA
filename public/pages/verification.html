@@ -218,9 +218,9 @@
               <input type="text" id="doc-number" name="documentType" class="form-input" placeholder="Enter your document number" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
             </div>
             <div class="form-group">
-              <label class="form-label form-label--required" for="doc-url">Document Image URL</label>
-              <input type="url" id="doc-url" name="documentUrl" class="form-input" placeholder="https://..." required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
-              <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary); margin-top: 0.25rem;">Upload to a secure image host and paste the link here.</p>
+              <label class="form-label form-label--required" for="doc-file">Document Image</label>
+              <input type="file" id="doc-file" name="document" accept="image/*" required class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary); margin-top: 0.25rem;">Accepted: JPG, PNG, WebP. Max 10MB.</p>
             </div>
             <button type="submit" class="btn btn--primary btn--block">Submit for Verification</button>
           </form>
@@ -234,15 +234,40 @@
         e.preventDefault();
         const btn = form.querySelector('button[type="submit"]');
         btn.disabled = true;
-        btn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Submitting...';
+        btn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Uploading...';
 
         try {
+          const fileInput = document.getElementById('doc-file');
+          const file = fileInput.files[0];
+
+          if (!file) {
+            throw new Error('Please select a document image');
+          }
+
+          const formData = new FormData();
+          formData.append('document', file);
+
+          const token = localStorage.getItem('accessToken');
+          const uploadResponse = await fetch('/api/v1/upload/verification-document', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+
+          if (!uploadResponse.ok) {
+            const data = await uploadResponse.json();
+            throw new Error(data.message || 'Failed to upload document');
+          }
+
+          const uploadData = await uploadResponse.json();
+
           await apiPost('/verification', {
             type: 'identity',
             documentType: form.documentType.value,
-            documentUrl: form.documentUrl.value,
+            documentUrl: uploadData.url,
             documentCategory: docType,
           });
+
           showToast('Identity verification submitted successfully', 'success');
           currentVerificationType = null;
           renderStatus();

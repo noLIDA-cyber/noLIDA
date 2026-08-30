@@ -11,6 +11,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const verificationDocsDir = path.join(__dirname, '..', '..', 'uploads', 'verification');
+if (!fs.existsSync(verificationDocsDir)) {
+  fs.mkdirSync(verificationDocsDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
@@ -35,6 +40,24 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const verificationStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, verificationDocsDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `verification-${req.user.id}-${Date.now()}${ext}`);
+  },
+});
+
+const uploadVerificationDoc = multer({
+  storage: verificationStorage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
   },
 });
 
@@ -77,4 +100,17 @@ const removeProfilePhoto = async (req, res, next) => {
   }
 };
 
-module.exports = { upload, uploadProfilePhoto, removeProfilePhoto };
+const uploadVerificationDocument = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new AppError('No file uploaded', 400);
+    }
+
+    const fileUrl = `/uploads/verification/${req.file.filename}`;
+    sendSuccess(res, { url: fileUrl, filename: req.file.filename });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { upload, uploadProfilePhoto, removeProfilePhoto, uploadVerificationDoc, uploadVerificationDocument };
