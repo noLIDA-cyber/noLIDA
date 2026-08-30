@@ -54,24 +54,24 @@
   --theme-bg-secondary: #111827;
   --theme-bg-tertiary: #1F2937;
   --theme-bg-elevated: #151B2E;
-  --theme-text-primary: #F9FAFB;
-  --theme-text-secondary: #D1D5DB;
-  --theme-text-tertiary: #9CA3AF;
+  --theme-text-primary: #FFFFFF;
+  --theme-text-secondary: #E5E7EB;
+  --theme-text-tertiary: #D1D5DB;
   --theme-text-inverse: #0B1020;
   --theme-text-on-gradient: #FFFFFF;
-  --theme-border: #1F2937;
-  --theme-border-hover: #374151;
+  --theme-border: #374151;
+  --theme-border-hover: #4B5563;
   --theme-card-bg: #151B2E;
-  --theme-header-bg: rgba(11, 16, 32, 0.92);
+  --theme-header-bg: rgba(11, 16, 32, 0.95);
   --theme-input-bg: #1F2937;
-  --theme-input-border: #374151;
+  --theme-input-border: #4B5563;
   --theme-input-text: #F9FAFB;
-  --theme-input-placeholder: #6B7280;
-  --theme-shadow-color: rgba(0, 0, 0, 0.35);
-  --theme-overlay-bg: rgba(0, 0, 0, 0.7);
+  --theme-input-placeholder: #9CA3AF;
+  --theme-shadow-color: rgba(0, 0, 0, 0.5);
+  --theme-overlay-bg: rgba(0, 0, 0, 0.75);
   --theme-code-bg: #1F2937;
-  --theme-selection-bg: rgba(37, 99, 235, 0.15);
-  --theme-focus-ring: rgba(37, 99, 235, 0.4);
+  --theme-selection-bg: rgba(37, 99, 235, 0.25);
+  --theme-focus-ring: rgba(37, 99, 235, 0.5);
   --theme-skeleton-base: #1F2937;
   --theme-skeleton-highlight: #374151;
 }
@@ -369,6 +369,86 @@ select:focus {
   background-color: rgba(239, 68, 68, 0.1);
   color: #FCA5A5;
   border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* ========================================
+   Settings Page Dark Mode
+   ======================================== */
+[data-theme="dark"] .card {
+  background-color: #151B2E;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .card h2 {
+  color: #F3F4F6;
+}
+
+[data-theme="dark"] .card p {
+  color: #D1D5DB;
+}
+
+[data-theme="dark"] .card a {
+  color: #E5E7EB;
+}
+
+[data-theme="dark"] .card a:hover {
+  color: #F3F4F6;
+}
+
+[data-theme="dark"] .theme-option {
+  border-color: #374151;
+  background-color: #1F2937;
+}
+
+[data-theme="dark"] .theme-option:hover {
+  border-color: #4B5563;
+  background-color: #1F2937;
+}
+
+[data-theme="dark"] .form-input {
+  background-color: #1F2937;
+  border-color: #374151;
+  color: #F9FAFB;
+}
+
+[data-theme="dark"] .form-input::placeholder {
+  color: #6B7280;
+}
+
+[data-theme="dark"] .theme-toggle-track {
+  background-color: #374151;
+}
+
+[data-theme="dark"] .theme-toggle-track::after {
+  background-color: #F9FAFB;
+}
+
+[data-theme="dark"] .theme-toggle-switch input:checked + .theme-toggle-track {
+  background-image: var(--gradient-primary);
+}
+
+[data-theme="dark"] .settings-card-title {
+  color: #F3F4F6;
+}
+
+[data-theme="dark"] .settings-card-description {
+  color: #D1D5DB;
+}
+
+[data-theme="dark"] .settings-info-label {
+  color: #E5E7EB;
+}
+
+[data-theme="dark"] .settings-info-value {
+  color: #9CA3AF;
+}
+
+[data-theme="dark"] .settings-divider {
+  border-color: #374151;
+}
+
+[data-theme="dark"] .settings-link-arrow {
+  color: #9CA3AF;
 }
 
 /* ========================================
