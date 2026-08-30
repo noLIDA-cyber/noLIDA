@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (page === 'verification') {
-    import('./modules/verification.js').then(m => m.initVerificationPage()).catch(err => console.error('Verification module failed:', err));
   }
 
   if (page === 'bookings') {
