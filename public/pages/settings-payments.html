@@ -41,6 +41,7 @@
               <p class="empty-state__description">Add a payment method to get started.</p>
             </div>
           </div>
+          <button id="add-payment-method-btn" class="btn btn--primary btn--sm" style="margin-top: 1rem;">+ Add Payment Method</button>
         </div>
 
         <div class="card">
@@ -56,11 +57,188 @@
 
   <script type="module" src="/js/app.js?v=16"></script>
   <script type="module">
-    import { apiGet, isAuthenticated } from '/js/api.js';
+    import { apiGet, apiPost, apiDelete, apiPatch, isAuthenticated } from '/js/api.js';
+
+    const showToast = (message, type = 'info', duration = 3000) => {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 1rem; right: 1rem; z-index: 400; display: flex; flex-direction: column; gap: 0.5rem;';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'card';
+      const borderColor = type === 'error' ? 'var(--color-danger)' : type === 'success' ? 'var(--color-success)' : 'var(--color-accent)';
+      toast.style.cssText = `padding: 0.75rem 1rem; border-left: 4px solid ${borderColor}; box-shadow: var(--shadow-md); font-size: var(--text-sm); color: var(--theme-text-primary);`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    };
 
     if (!isAuthenticated()) {
       window.location.href = '/auth';
     }
+
+    const paymentMethodsContainer = document.getElementById('payment-methods');
+    const addPaymentMethodBtn = document.getElementById('add-payment-method-btn');
+
+    const loadPaymentMethods = async () => {
+      try {
+        const data = await apiGet('/payment-methods');
+        const methods = data.data || [];
+        renderPaymentMethods(methods);
+      } catch (error) {
+        paymentMethodsContainer.innerHTML = `<div class="alert alert--danger">${error.message}</div>`;
+      }
+    };
+
+    const renderPaymentMethods = (methods) => {
+      if (methods.length === 0) {
+        paymentMethodsContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state__icon">💳</div>
+            <p class="empty-state__title">No payment methods</p>
+            <p class="empty-state__description">Add a payment method to get started.</p>
+          </div>`;
+        return;
+      }
+
+      paymentMethodsContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          ${methods.map(m => `
+            <div class="card" style="padding: 1rem; border: 1px solid var(--theme-border); background: var(--theme-card-bg); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 1.5rem;">${m.type === 'card' ? '💳' : m.type === 'bank_account' ? '🏦' : '📱'}</div>
+                <div>
+                  <p style="font-weight: var(--weight-medium); color: var(--theme-text-primary); font-size: var(--text-sm);">
+                    ${m.brand ? m.brand.toUpperCase() : m.type} ${m.last_four ? `•••• ${m.last_four}` : ''}
+                  </p>
+                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary);">
+                    ${m.is_default ? '<span class="badge badge--success">Default</span>' : ''}
+                    ${m.exp_month && m.exp_year ? `Expires ${m.exp_month}/${m.exp_year}` : ''}
+                  </p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                ${!m.is_default ? `<button class="btn btn--ghost btn--sm set-default" data-id="${m.id}">Set Default</button>` : ''}
+                <button class="btn btn--ghost btn--sm delete-method" data-id="${m.id}" style="color: var(--color-danger);">Remove</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      paymentMethodsContainer.querySelectorAll('.delete-method').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Remove this payment method?')) return;
+          try {
+            await apiDelete(`/payment-methods/${btn.dataset.id}`);
+            showToast('Payment method removed', 'success');
+            loadPaymentMethods();
+          } catch (error) {
+            showToast(error.message || 'Failed to remove payment method', 'error');
+          }
+        });
+      });
+
+      paymentMethodsContainer.querySelectorAll('.set-default').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          try {
+            await apiPatch(`/payment-methods/${btn.dataset.id}/default`);
+            showToast('Default payment method updated', 'success');
+            loadPaymentMethods();
+          } catch (error) {
+            showToast(error.message || 'Failed to set default', 'error');
+          }
+        });
+      });
+    };
+
+    if (addPaymentMethodBtn) {
+      addPaymentMethodBtn.addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+        modal.innerHTML = `
+          <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Payment Method</h3>
+              <button class="btn btn--ghost btn--sm" id="close-payment-modal" style="color: var(--theme-text-secondary);">✕</button>
+            </div>
+            <form id="payment-method-form">
+              <div class="form-group">
+                <label class="form-label" for="pm-type">Type</label>
+                <select id="pm-type" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                  <option value="card">Card</option>
+                  <option value="bank_account">Bank Account</option>
+                  <option value="mobile_money">Mobile Money</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pm-last-four">Last Four Digits / Account Number</label>
+                <input type="text" id="pm-last-four" class="form-input" placeholder="1234" maxlength="4" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pm-brand">Bank / Card Brand</label>
+                <input type="text" id="pm-brand" class="form-input" placeholder="e.g. Visa, GTBank" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="pm-exp-month">Expiry Month</label>
+                  <input type="number" id="pm-exp-month" class="form-input" placeholder="MM" min="1" max="12" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pm-exp-year">Expiry Year</label>
+                  <input type="number" id="pm-exp-year" class="form-input" placeholder="YYYY" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+              </div>
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--theme-text-secondary); font-size: var(--text-sm);">
+                  <input type="checkbox" id="pm-default"> Set as default payment method
+                </label>
+              </div>
+              <button type="submit" class="btn btn--primary btn--block mt-4">Save Payment Method</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('close-payment-modal').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        document.getElementById('payment-method-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = 'Saving...';
+
+          try {
+            await apiPost('/payment-methods', {
+              type: document.getElementById('pm-type').value,
+              last_four: document.getElementById('pm-last-four').value || null,
+              brand: document.getElementById('pm-brand').value || null,
+              exp_month: parseInt(document.getElementById('pm-exp-month').value) || null,
+              exp_year: parseInt(document.getElementById('pm-exp-year').value) || null,
+              is_default: document.getElementById('pm-default').checked,
+            });
+            showToast('Payment method added', 'success');
+            modal.remove();
+            loadPaymentMethods();
+          } catch (error) {
+            showToast(error.message || 'Failed to add payment method', 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Save Payment Method';
+          }
+        });
+      });
+    }
+
+    loadPaymentMethods();
 
     const transactionsList = document.getElementById('transactions-list');
     if (transactionsList) {
