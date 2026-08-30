@@ -124,3 +124,117 @@ const hideLoading = (elementId, content) => {
 };
 
 export { navigate, showToast, showLoading, hideLoading };
+
+const profileBtn = document.getElementById('profile-btn');
+const drawer = document.getElementById('profile-drawer');
+const drawerBackdrop = document.getElementById('profile-drawer-backdrop');
+const closeDrawerBtn = document.getElementById('close-drawer');
+const drawerGuest = document.getElementById('drawer-guest');
+const drawerUser = document.getElementById('drawer-user');
+const drawerUserName = document.getElementById('drawer-user-name');
+const drawerUserEmail = document.getElementById('drawer-user-email');
+const drawerLogout = document.getElementById('drawer-logout');
+const profileIconDefault = document.getElementById('profile-icon-default');
+const profileAvatar = document.getElementById('profile-avatar');
+const notificationBtn = document.getElementById('notification-btn');
+const notificationBadge = document.getElementById('notification-badge');
+
+const openDrawer = () => {
+  if (!drawer || !drawerBackdrop) return;
+  drawer.style.transform = 'translateX(0)';
+  drawerBackdrop.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    drawerBackdrop.style.opacity = '1';
+  });
+  document.body.style.overflow = 'hidden';
+};
+
+const closeDrawer = () => {
+  if (!drawer || !drawerBackdrop) return;
+  drawer.style.transform = 'translateX(100%)';
+  drawerBackdrop.style.opacity = '0';
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    drawerBackdrop.classList.add('hidden');
+  }, 300);
+};
+
+if (profileBtn) {
+  profileBtn.addEventListener('click', openDrawer);
+}
+
+if (closeDrawerBtn) {
+  closeDrawerBtn.addEventListener('click', closeDrawer);
+}
+
+if (drawerBackdrop) {
+  drawerBackdrop.addEventListener('click', closeDrawer);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeDrawer();
+});
+
+if (drawerLogout) {
+  drawerLogout.addEventListener('click', async () => {
+    await logout();
+    closeDrawer();
+  });
+}
+
+if (notificationBtn) {
+  notificationBtn.addEventListener('click', () => {
+    navigate('/notifications');
+  });
+}
+
+const updateDrawerState = () => {
+  if (!drawerGuest || !drawerUser || !drawerLogout) return;
+  const authenticated = isAuthenticated();
+  if (authenticated) {
+    drawerGuest.style.display = 'none';
+    drawerUser.style.display = 'block';
+    drawerLogout.style.display = 'flex';
+    const user = getCurrentUser();
+    if (user && drawerUserName && drawerUserEmail) {
+      drawerUserName.textContent = user.display_name || user.first_name || 'User';
+      drawerUserEmail.textContent = user.email || '';
+    }
+  } else {
+    drawerGuest.style.display = 'block';
+    drawerUser.style.display = 'none';
+    drawerLogout.style.display = 'none';
+  }
+};
+
+const updateProfileAvatar = () => {
+  if (!profileIconDefault || !profileAvatar) return;
+  const user = getCurrentUser();
+  if (user && user.avatar_url) {
+    profileAvatar.src = user.avatar_url;
+    profileAvatar.style.display = 'block';
+    profileIconDefault.style.display = 'none';
+  } else {
+    profileAvatar.style.display = 'none';
+    profileIconDefault.style.display = 'block';
+  }
+};
+
+const updateNotificationBadge = async () => {
+  if (!notificationBadge) return;
+  try {
+    const data = await apiGet('/notifications/unread-count');
+    const count = data?.data?.count || 0;
+    if (count > 0) {
+      notificationBadge.classList.remove('hidden');
+    } else {
+      notificationBadge.classList.add('hidden');
+    }
+  } catch (e) {
+    notificationBadge.classList.add('hidden');
+  }
+};
+
+updateDrawerState();
+updateProfileAvatar();
+updateNotificationBadge();

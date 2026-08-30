@@ -28,6 +28,7 @@ const auditRoutes = require('./routes/audit');
 const providerRoutes = require('./routes/provider');
 const requestRoutes = require('./routes/requests');
 const feeRoutes = require('./routes/fees');
+const notificationRoutes = require('./routes/notifications');
 
 require('./services/paymentGatewaySetup');
 
@@ -96,6 +97,7 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/audit`, auditRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/provider`, providerRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/requests`, requestRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/fees`, feeRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/notifications`, notificationRoutes);
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/index.html'));
