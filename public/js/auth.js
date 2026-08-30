@@ -27,9 +27,14 @@ const initAuthPage = () => {
       googleBtn.disabled = true;
       googleBtn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Connecting...';
       try {
-        await apiPost('/auth/google', {});
+        const data = await apiPost('/auth/google', {});
+        localStorage.setItem('accessToken', data.data.accessToken);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        showToast('Signed in with Google!', 'success');
+        navigate('/dashboard');
       } catch (error) {
-        showToast(error.message || 'Google sign-in is not available yet', 'error');
+        showToast(error.message || 'Google sign-in failed', 'error');
       } finally {
         googleBtn.disabled = false;
         googleBtn.textContent = 'Continue with Google';
@@ -43,9 +48,14 @@ const initAuthPage = () => {
       appleBtn.disabled = true;
       appleBtn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Connecting...';
       try {
-        await apiPost('/auth/apple', {});
+        const data = await apiPost('/auth/apple', {});
+        localStorage.setItem('accessToken', data.data.accessToken);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        showToast('Signed in with Apple!', 'success');
+        navigate('/dashboard');
       } catch (error) {
-        showToast(error.message || 'Apple sign-in is not available yet', 'error');
+        showToast(error.message || 'Apple sign-in failed', 'error');
       } finally {
         appleBtn.disabled = false;
         appleBtn.textContent = 'Continue with Apple';
@@ -71,7 +81,7 @@ const initAuthPage = () => {
         localStorage.setItem('refreshToken', data.data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         showToast('Welcome back!', 'success');
-        navigate('/dashboard');
+        navigate('/');
       } catch (error) {
         showToast(error.message || 'Login failed', 'error');
         btn.disabled = false;
@@ -122,7 +132,7 @@ const initAuthPage = () => {
         localStorage.setItem('refreshToken', data.data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         showToast('Account created successfully!', 'success');
-        navigate('/dashboard');
+        navigate('/');
       } catch (error) {
         showToast(error.message || 'Registration failed', 'error');
         btn.disabled = false;

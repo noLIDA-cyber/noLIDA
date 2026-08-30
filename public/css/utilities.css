@@ -1,3 +1,5 @@
+.hidden { display: none; }
+
 .text-xs { font-size: var(--text-xs); }
 .text-sm { font-size: var(--text-sm); }
 .text-base { font-size: var(--text-base); }
