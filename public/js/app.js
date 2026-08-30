@@ -69,6 +69,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (page === 'customer-detail') {
     import('./modules/customers.js').then(m => m.initCustomerDetail()).catch(err => console.error('Customer detail module failed:', err));
   }
+
+  if (page === 'analytics') {
+    import('./modules/analytics.js').then(m => m.initAnalyticsPage()).catch(err => console.error('Analytics module failed:', err));
+  }
 });
 
 const navigate = (url) => {
