@@ -790,3 +790,45 @@ tbody tr:hover {
   color: var(--color-warning);
   font-weight: var(--weight-medium);
 }
+
+[data-theme="dark"] .accent-theme-card {
+  border-color: #374151;
+}
+
+[data-theme="dark"] .accent-theme-card:hover {
+  border-color: #4B5563;
+}
+
+[data-theme="dark"] .accent-theme-swatch {
+  border-color: #4B5563;
+}
+
+[data-theme="dark"] .settings-section-title {
+  color: #F3F4F6;
+}
+
+[data-theme="dark"] .settings-section-description {
+  color: #D1D5DB;
+}
+
+[data-theme="dark"] .card {
+  border-color: #374151;
+}
+
+[data-theme="dark"] .card a {
+  color: #E5E7EB;
+}
+
+[data-theme="dark"] .card a:hover {
+  color: #F3F4F6;
+}
+
+[data-theme="dark"] .form-input {
+  background-color: #1F2937;
+  border-color: #374151;
+  color: #F9FAFB;
+}
+
+[data-theme="dark"] .form-input::placeholder {
+  color: #6B7280;
+}
