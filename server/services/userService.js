@@ -14,7 +14,7 @@ const getUserProfile = async (userId) => {
 };
 
 const updateUserProfile = async (userId, updates) => {
-  const allowedFields = ['first_name', 'last_name', 'display_name', 'bio', 'country', 'language', 'currency', 'timezone', 'theme'];
+  const allowedFields = ['first_name', 'last_name', 'display_name', 'bio', 'country', 'language', 'currency', 'timezone', 'theme', 'accent'];
   const profileUpdates = [];
   const profileValues = [];
   let index = 1;

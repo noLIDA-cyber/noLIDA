@@ -17,9 +17,9 @@ router.get('/theme', async (req, res, next) => {
   try {
     if (req.user) {
       const user = await getUserProfile(req.user.id);
-      return sendSuccess(res, { theme: user.theme || 'system' });
+      return sendSuccess(res, { theme: user.theme || 'system', accent: user.accent || 'default' });
     }
-    sendSuccess(res, { theme: 'system' });
+    sendSuccess(res, { theme: 'system', accent: 'default' });
   } catch (error) {
     next(error);
   }
@@ -27,14 +27,22 @@ router.get('/theme', async (req, res, next) => {
 
 router.patch('/theme', authenticate, async (req, res, next) => {
   try {
-    const { theme } = req.body;
+    const { theme, accent } = req.body;
 
-    if (!theme || !['light', 'dark', 'system'].includes(theme)) {
+    if (theme && !['light', 'dark', 'system'].includes(theme)) {
       throw new AppError('Invalid theme. Must be light, dark, or system.', 400);
     }
 
-    const user = await updateUserProfile(req.user.id, { theme });
-    sendSuccess(res, { theme: user.theme });
+    if (accent && !['default', 'neon-green', 'sunset', 'cyan', 'sage', 'burgundy'].includes(accent)) {
+      throw new AppError('Invalid accent. Must be default, neon-green, sunset, cyan, sage, or burgundy.', 400);
+    }
+
+    const updates = {};
+    if (theme) updates.theme = theme;
+    if (accent) updates.accent = accent;
+
+    const user = await updateUserProfile(req.user.id, updates);
+    sendSuccess(res, { theme: user.theme, accent: user.accent });
   } catch (error) {
     next(error);
   }
