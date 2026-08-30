@@ -67,6 +67,8 @@ app.use(express.static(path.join(__dirname, '..', 'public'), {
   },
 }));
 
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 app.use(generalLimiter);
 
 app.use(`/api/${process.env.API_VERSION || 'v1'}/health`, healthRoutes);

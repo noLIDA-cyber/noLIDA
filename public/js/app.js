@@ -158,6 +158,8 @@ const drawerUser = document.getElementById('drawer-user');
 const drawerUserName = document.getElementById('drawer-user-name');
 const drawerUserEmail = document.getElementById('drawer-user-email');
 const drawerLogout = document.getElementById('drawer-logout');
+const drawerAvatarImg = document.getElementById('drawer-avatar-img');
+const drawerAvatarIcon = document.getElementById('drawer-avatar-icon');
 const profileIconDefault = document.getElementById('profile-icon-default');
 const profileAvatar = document.getElementById('profile-avatar');
 const notificationBtn = document.getElementById('notification-btn');
@@ -234,10 +236,50 @@ const updateDrawerState = () => {
       drawerUserName.textContent = user.display_name || user.first_name || 'User';
       drawerUserEmail.textContent = user.email || '';
     }
+    updateDrawerAvatar();
   } else {
     drawerGuest.style.display = 'block';
     drawerUser.style.display = 'none';
     drawerLogout.style.display = 'none';
+    if (drawerAvatarImg) {
+      drawerAvatarImg.style.display = 'none';
+      drawerAvatarImg.src = '';
+    }
+    if (drawerAvatarIcon) {
+      drawerAvatarIcon.style.display = 'block';
+    }
+  }
+};
+
+const updateDrawerAvatar = async () => {
+  if (!drawerAvatarImg || !drawerAvatarIcon) return;
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      drawerAvatarIcon.style.display = 'block';
+      drawerAvatarImg.style.display = 'none';
+      return;
+    }
+
+    const response = await fetch('/api/v1/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const avatarUrl = data.data?.avatar_url;
+      if (avatarUrl) {
+        drawerAvatarImg.src = avatarUrl;
+        drawerAvatarImg.style.display = 'block';
+        drawerAvatarIcon.style.display = 'none';
+      } else {
+        drawerAvatarIcon.style.display = 'block';
+        drawerAvatarImg.style.display = 'none';
+      }
+    }
+  } catch (e) {
+    drawerAvatarIcon.style.display = 'block';
+    drawerAvatarImg.style.display = 'none';
   }
 };
 

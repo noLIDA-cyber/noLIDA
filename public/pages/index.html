@@ -121,8 +121,9 @@
       </div>
       <div id="drawer-user" style="display: none;">
         <div class="flex items-center gap-3">
-          <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--theme-bg-tertiary); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--theme-bg-tertiary); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;" id="drawer-avatar-container">
+            <svg id="drawer-avatar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <img id="drawer-avatar-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
           </div>
           <div style="min-width: 0;">
             <p id="drawer-user-name" style="font-weight: var(--weight-semibold); color: var(--theme-text-primary); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
