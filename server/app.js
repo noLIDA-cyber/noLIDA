@@ -31,6 +31,8 @@ const feeRoutes = require('./routes/fees');
 
 require('./services/paymentGatewaySetup');
 
+const path = require('path');
+
 const app = express();
 
 app.use(helmet({
@@ -55,7 +57,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-app.use(express.static('public', {
+app.use(express.static(path.join(__dirname, '..', 'public'), {
   setHeaders: (res) => {
     if (process.env.NODE_ENV !== 'production') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
