@@ -49,6 +49,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (page === 'verification') {
     import('./modules/verification.js').then(m => m.initVerificationPage()).catch(err => console.error('Verification module failed:', err));
   }
+
+  if (page === 'bookings') {
+    import('./modules/bookings.js').then(m => m.initBookingsPage()).catch(err => console.error('Bookings module failed:', err));
+  }
+
+  if (page === 'booking-detail') {
+    import('./modules/bookings.js').then(m => m.initBookingDetail()).catch(err => console.error('Booking detail module failed:', err));
+  }
+
+  if (page === 'provider') {
+    import('./modules/bookings.js').then(m => m.initProviderDashboard()).catch(err => console.error('Provider module failed:', err));
+  }
 });
 
 const navigate = (url) => {

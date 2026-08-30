@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — My Bookings</title>
+  <title>noLIDA — Provider Dashboard</title>
   <link rel="stylesheet" href="/css/variables.css?v=16">
   <link rel="stylesheet" href="/css/theme.css?v=16">
   <link rel="stylesheet" href="/css/reset.css?v=16">
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/css/utilities.css?v=16">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
-<body data-page="bookings">
+<body data-page="provider">
   <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
     <div class="container flex items-center justify-between" style="height: 100%;">
       <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
@@ -21,7 +21,7 @@
       </a>
       <nav class="nav-links flex items-center gap-2 sm:gap-3">
         <a href="/dashboard" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Dashboard</a>
-        <a href="/provider" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Provider</a>
+        <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Bookings</a>
         <button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
       </nav>
     </div>
@@ -29,26 +29,7 @@
 
   <main class="page">
     <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
-      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
-        <div>
-          <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.25rem;">My Bookings</h1>
-          <p style="color: var(--theme-text-secondary); margin: 0;">Manage your appointments and reservations.</p>
-        </div>
-        <button id="new-booking-btn" class="btn btn--primary">+ New Booking</button>
-      </div>
-
-      <div class="card" style="padding: 0.5rem 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-        <div class="flex gap-2" style="display: flex; gap: 0.5rem;">
-          <button class="btn btn--primary btn--sm filter-tab" data-status="">All</button>
-          <button class="btn btn--ghost btn--sm filter-tab" data-status="pending">Pending</button>
-          <button class="btn btn--ghost btn--sm filter-tab" data-status="confirmed">Confirmed</button>
-          <button class="btn btn--ghost btn--sm filter-tab" data-status="completed">Completed</button>
-          <button class="btn btn--ghost btn--sm filter-tab" data-status="cancelled">Cancelled</button>
-        </div>
-        <input type="text" id="booking-search" class="form-input" placeholder="Search bookings..." style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text); flex: 1; min-width: 200px; max-width: 320px;">
-      </div>
-
-      <div id="bookings-list">
+      <div id="provider-content">
         <div class="loading-spinner" style="margin: 2rem auto;"></div>
       </div>
     </div>

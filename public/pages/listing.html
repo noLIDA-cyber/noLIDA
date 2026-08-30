@@ -78,6 +78,7 @@
           <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
             <span class="badge ${listing.verified ? 'badge--success' : 'badge--primary'}">${listing.verified ? 'Verified' : 'Unverified'}</span>
             <span style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--theme-accent);">${priceDisplay}</span>
+            <a href="/book/new?listingId=${listing.id}" class="btn btn--primary" style="margin-top: 0.5rem;">Book Now</a>
           </div>
         </div>
         <div class="card">

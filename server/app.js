@@ -137,8 +137,20 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/admin.html'));
 });
 
+app.get('/provider', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/provider.html'));
+});
+
 app.get('/bookings', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/bookings.html'));
+});
+
+app.get('/booking/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/booking.html'));
+});
+
+app.get('/book/new', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/book-new.html'));
 });
 
 app.get('/cart', (req, res) => {

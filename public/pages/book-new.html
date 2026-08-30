@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — Book Service</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="book-new">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Back to Bookings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 800px;">
+      <div id="booking-content">
+        <div class="loading-spinner" style="margin: 2rem auto;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { apiGet, apiPost, isAuthenticated } from '/js/api.js';
+
+    const showToast = (message, type = 'info', duration = 3000) => {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 1rem; right: 1rem; z-index: 400; display: flex; flex-direction: column; gap: 0.5rem;';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'card';
+      const borderColor = type === 'error' ? 'var(--color-danger)' : type === 'success' ? 'var(--color-success)' : 'var(--color-accent)';
+      toast.style.cssText = `padding: 0.75rem 1rem; border-left: 4px solid ${borderColor}; box-shadow: var(--shadow-md); font-size: var(--text-sm); color: var(--theme-text-primary);`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    };
+
+    if (!isAuthenticated()) {
+      window.location.href = '/auth';
+    }
+
+    const container = document.getElementById('booking-content');
+    const urlParams = new URLSearchParams(window.location.search);
+    const listingId = urlParams.get('listingId');
+
+    const loadListingAndSlots = async () => {
+      if (!listingId) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state__icon">😕</div>
+            <p class="empty-state__title">No listing selected</p>
+            <p class="empty-state__description">Please select a service to book.</p>
+            <a href="/search" class="btn btn--primary" style="margin-top: 1rem;">Browse Services</a>
+          </div>`;
+        return;
+      }
+
+      try {
+        const [listingRes, datesRes] = await Promise.all([
+          apiGet(`/listings/${listingId}`),
+          apiGet(`/bookings/available/dates/${listingId}?days=30`),
+        ]);
+
+        const listing = listingRes.data;
+        const availableDates = datesRes.data || [];
+
+        renderBookingForm(listing, availableDates);
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
+      }
+    };
+
+    const renderBookingForm = (listing, availableDates) => {
+      const priceDisplay = listing.pricing_type === 'hourly' && listing.base_price
+        ? `₦${Number(listing.base_price).toLocaleString()} / hour`
+        : listing.base_price
+        ? `₦${Number(listing.base_price).toLocaleString()}`
+        : 'Contact for price';
+
+      container.innerHTML = `
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <div class="avatar">${listing.business_name ? listing.business_name[0] : '?'}</div>
+            <div>
+              <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">${listing.title}</h1>
+              <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${listing.business_name || listing.provider_name || 'Independent Provider'} · ${listing.category_name || 'General'}</p>
+            </div>
+          </div>
+          <p style="color: var(--theme-text-secondary); line-height: var(--leading-relaxed); margin-bottom: 1rem;">${listing.description || 'No description provided.'}</p>
+          <p style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-accent); margin: 0;">${priceDisplay}</p>
+        </div>
+
+        <form id="booking-form">
+          <div class="form-group">
+            <label class="form-label form-label--required" for="booking-date">Select Date</label>
+            <select id="booking-date" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              <option value="">Choose a date</option>
+              ${availableDates.filter(d => d.available).map(d => `<option value="${d.date}">${d.day} — ${new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label--required" for="booking-time">Select Time Slot</label>
+            <select id="booking-time" class="form-input" required disabled style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              <option value="">Select a date first</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="booking-notes">Notes (optional)</label>
+            <textarea id="booking-notes" class="form-input" rows="3" placeholder="Any special requests or details..." style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text); resize: vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="booking-location">Location (optional)</label>
+            <input type="text" id="booking-location" class="form-input" placeholder="Enter service address" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block mt-4">Confirm Booking</button>
+        </form>
+      `;
+
+      const dateSelect = document.getElementById('booking-date');
+      const timeSelect = document.getElementById('booking-time');
+      const notesInput = document.getElementById('booking-notes');
+      const locationInput = document.getElementById('booking-location');
+      const bookingForm = document.getElementById('booking-form');
+
+      dateSelect.addEventListener('change', async () => {
+        const date = dateSelect.value;
+        if (!date) return;
+
+        timeSelect.innerHTML = '<option value="">Loading slots...</option>';
+        timeSelect.disabled = true;
+
+        try {
+          const slotsRes = await apiGet(`/bookings/available/slots/${listingId}?date=${date}`);
+          const slots = slotsRes.data?.slots || [];
+
+          timeSelect.innerHTML = '<option value="">Choose a time slot</option>' +
+            slots.map(s => `<option value="${s.start_time}" data-end-time="${s.end_time}" ${!s.available ? 'disabled' : ''}>${s.start_time} - ${s.end_time}${s.available ? '' : ' (Booked)'}</option>`).join('');
+          timeSelect.disabled = false;
+        } catch (err) {
+          timeSelect.innerHTML = '<option value="">No slots available</option>';
+        }
+      });
+
+      bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = bookingForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = 'Booking...';
+
+        const selectedOption = timeSelect.options[timeSelect.selectedIndex];
+        const endTime = selectedOption.dataset.endTime;
+
+        try {
+          await apiPost('/bookings', {
+            listingId: parseInt(listingId),
+            bookingDate: dateSelect.value,
+            startTime: timeSelect.value,
+            endTime: selectedOption.dataset.endTime,
+            notes: notesInput.value || null,
+            location: locationInput.value || null,
+            metadata: {
+              totalAmount: listing.base_price || 0,
+              currency: 'NGN',
+            },
+          });
+          showToast('Booking created successfully!', 'success');
+          window.location.href = '/bookings';
+        } catch (err) {
+          showToast(err.message || 'Failed to create booking', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'Confirm Booking';
+        }
+      });
+    };
+
+    loadListingAndSlots();
+  </script>
+</body>
+</html>
