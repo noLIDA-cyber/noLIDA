@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const { AppError } = require('../middleware/error');
-const { registerUser, authenticateUser, refreshAccessToken, createOTP, verifyOTP } = require('../services/authService');
+const { registerUser, authenticateUser, refreshAccessToken, createOTP, verifyOTP, changePassword } = require('../services/authService');
 const { generateTokens } = require('../utils/crypto');
 const { sendSuccess, sendError } = require('../utils/response');
+const { authenticate } = require('../middleware/auth');
 
 router.post('/register', async (req, res, next) => {
   try {
@@ -114,6 +115,26 @@ router.post('/verify-email', async (req, res, next) => {
     }
 
     res.json({ success: true, message: 'Email verified successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/change-password', authenticate, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      throw new AppError('Current password and new password are required', 400);
+    }
+
+    if (newPassword.length < 8) {
+      throw new AppError('New password must be at least 8 characters', 400);
+    }
+
+    await changePassword(req.user.id, currentPassword, newPassword);
+
+    res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     next(error);
   }

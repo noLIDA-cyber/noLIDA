@@ -119,6 +119,36 @@ const verifyOTP = async (userId, code, purpose) => {
   return true;
 };
 
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const authResult = await query(
+    'SELECT password_hash FROM user_auth_methods WHERE user_id = $1 AND provider = $2',
+    [userId, 'email']
+  );
+
+  if (authResult.rows.length === 0 || !authResult.rows[0].password_hash) {
+    throw new AppError('No password set for this account', 400);
+  }
+
+  const isValid = await comparePassword(currentPassword, authResult.rows[0].password_hash);
+  if (!isValid) {
+    throw new AppError('Current password is incorrect', 401);
+  }
+
+  const newHash = await hashPassword(newPassword);
+
+  await query(
+    'UPDATE user_auth_methods SET password_hash = $1, updated_at = NOW() WHERE user_id = $2 AND provider = $3',
+    [newHash, userId, 'email']
+  );
+
+  await query(
+    'INSERT INTO audit_logs (actor_id, action, target_type, target_id, changes) VALUES ($1, $2, $3, $4, $5)',
+    [userId, 'password_changed', 'user', userId, JSON.stringify({ changed_at: new Date().toISOString() })]
+  );
+
+  return true;
+};
+
 module.exports = {
   hashPassword,
   comparePassword,
@@ -127,4 +157,5 @@ module.exports = {
   refreshAccessToken,
   createOTP,
   verifyOTP,
+  changePassword,
 };
