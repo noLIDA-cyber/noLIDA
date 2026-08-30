@@ -177,6 +177,14 @@ app.get('/settings/payments', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/settings-payments.html'));
 });
 
+app.get('/settings/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/settings-privacy.html'));
+});
+
+app.get('/settings/account', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/settings-account.html'));
+});
+
 app.use(notFound);
 app.use(errorHandler);
 

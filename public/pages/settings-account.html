@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>noLIDA — Account Management</title>
+  <link rel="stylesheet" href="/css/variables.css?v=16">
+  <link rel="stylesheet" href="/css/theme.css?v=16">
+  <link rel="stylesheet" href="/css/reset.css?v=16">
+  <link rel="stylesheet" href="/css/base.css?v=16">
+  <link rel="stylesheet" href="/css/components.css?v=16">
+  <link rel="stylesheet" href="/css/utilities.css?v=16">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body data-page="settings">
+  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <div class="container flex items-center justify-between" style="height: 100%;">
+      <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+        <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
+        <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
+      </a>
+      <nav class="nav-links flex items-center gap-2 sm:gap-3">
+        <a href="/settings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Back to Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 680px;">
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.5rem;">Account Management</h1>
+      <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">Manage your account status and data.</p>
+
+      <div class="space-y-4">
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Data</h2>
+          <div class="space-y-3">
+            <button class="btn btn--secondary btn--block" onclick="alert('Feature coming soon')">Export My Data</button>
+            <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary);">Download a copy of all your noLIDA data.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Deactivate Account</h2>
+          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Temporarily disable your account. You can reactivate it later.</p>
+          <button class="btn btn--secondary btn--block" onclick="alert('Feature coming soon')">Deactivate Account</button>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-danger); margin-bottom: 1rem;">Danger Zone</h2>
+          <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Permanently delete your account and all associated data. This action cannot be undone.</p>
+          <button class="btn btn--secondary btn--block" style="color: var(--color-danger); border-color: var(--color-danger);" onclick="alert('Feature coming soon')">Delete Account</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
