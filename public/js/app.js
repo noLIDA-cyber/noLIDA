@@ -61,6 +61,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (page === 'provider') {
     import('./modules/bookings.js').then(m => m.initProviderDashboard()).catch(err => console.error('Provider module failed:', err));
   }
+
+  if (page === 'customers') {
+    import('./modules/customers.js').then(m => m.initCustomersPage()).catch(err => console.error('Customers module failed:', err));
+  }
+
+  if (page === 'customer-detail') {
+    import('./modules/customers.js').then(m => m.initCustomerDetail()).catch(err => console.error('Customer detail module failed:', err));
+  }
 });
 
 const navigate = (url) => {

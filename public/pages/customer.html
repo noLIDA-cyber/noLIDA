@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — Provider Dashboard</title>
+  <title>noLIDA — Customer Detail</title>
   <link rel="stylesheet" href="/css/variables.css?v=16">
   <link rel="stylesheet" href="/css/theme.css?v=16">
   <link rel="stylesheet" href="/css/reset.css?v=16">
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/css/utilities.css?v=16">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
-<body data-page="provider">
+<body data-page="customer-detail">
   <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
     <div class="container flex items-center justify-between" style="height: 100%;">
       <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
@@ -20,17 +20,14 @@
         <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
       </a>
       <nav class="nav-links flex items-center gap-2 sm:gap-3">
-        <a href="/dashboard" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Dashboard</a>
-        <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Bookings</a>
-        <a href="/customers" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Customers</a>
-        <button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
+        <a href="/customers" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Customers</a>
       </nav>
     </div>
   </header>
 
   <main class="page">
-    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
-      <div id="provider-content">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 900px;">
+      <div id="customer-detail">
         <div class="loading-spinner" style="margin: 2rem auto;"></div>
       </div>
     </div>

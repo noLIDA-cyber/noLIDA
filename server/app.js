@@ -26,6 +26,7 @@ const verificationRoutes = require('./routes/verification');
 const riskRoutes = require('./routes/risk');
 const auditRoutes = require('./routes/audit');
 const providerRoutes = require('./routes/provider');
+const customerRoutes = require('./routes/customers');
 const requestRoutes = require('./routes/requests');
 const feeRoutes = require('./routes/fees');
 const notificationRoutes = require('./routes/notifications');
@@ -96,6 +97,7 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/verification`, verificationRout
 app.use(`/api/${process.env.API_VERSION || 'v1'}/risk`, riskRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/audit`, auditRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/provider`, providerRoutes);
+app.use(`/api/${process.env.API_VERSION || 'v1'}/customers`, customerRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/requests`, requestRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/fees`, feeRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/notifications`, notificationRoutes);
@@ -139,6 +141,14 @@ app.get('/admin', (req, res) => {
 
 app.get('/provider', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/provider.html'));
+});
+
+app.get('/customers', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/customers.html'));
+});
+
+app.get('/customer/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/customer.html'));
 });
 
 app.get('/bookings', (req, res) => {

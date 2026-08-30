@@ -311,20 +311,21 @@ export const initProviderDashboard = () => {
   const loadDashboard = async () => {
     container.innerHTML = '<div class="loading-spinner" style="margin: 2rem auto;"></div>';
     try {
-      const [statsRes, bookingsRes, availabilityRes, listingsRes] = await Promise.all([
+      const [statsRes, bookingsRes, availabilityRes, listingsRes, customersRes] = await Promise.all([
         apiGet('/provider/dashboard'),
         apiGet('/provider/bookings'),
         apiGet('/provider/availability'),
         apiGet('/provider/listings'),
+        apiGet('/customers/stats'),
       ]);
 
-      renderDashboard(statsRes.data, bookingsRes.data, availabilityRes.data, listingsRes.data);
+      renderDashboard(statsRes.data, bookingsRes.data, availabilityRes.data, listingsRes.data, customersRes.data);
     } catch (err) {
       container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
     }
   };
 
-  const renderDashboard = (stats, bookings, availability, listings) => {
+  const renderDashboard = (stats, bookings, availability, listings, customerStats) => {
     const upcomingBookings = (bookings || []).filter(b => ['confirmed', 'in_progress'].includes(b.transaction_status));
 
     container.innerHTML = `
@@ -428,6 +429,35 @@ export const initProviderDashboard = () => {
           </div>
         `}
       </div>
+
+      ${customerStats?.top_customers && customerStats.top_customers.length > 0 ? `
+        <div class="card" style="margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Top Customers</h2>
+            <a href="/customers" class="btn btn--ghost btn--sm">View All</a>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--theme-border);">
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Customer</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Bookings</th>
+                  <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Total Spend</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${customerStats.top_customers.map(c => `
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${c.display_name || c.email}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${c.booking_count}</td>
+                    <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">₦${Number(c.total_spend || 0).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="card">
         <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">My Listings</h2>
