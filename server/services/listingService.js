@@ -10,9 +10,10 @@ const listListings = async (filters = {}) => {
   const organizationId = filters.organizationId ? parseInt(filters.organizationId) : null;
   const status = filters.status || 'active';
   const search = filters.q?.trim();
+  const includeUnapproved = filters.includeUnapproved === true;
 
   let sql = `
-    SELECT l.id, l.title, l.description, l.status, l.verified, l.featured, l.created_at,
+    SELECT l.id, l.title, l.description, l.status, l.verified, l.featured, l.created_at, l.approval_status,
            c.name as category_name,
            p.display_name as provider_name,
            org.name as business_name,
@@ -30,6 +31,12 @@ const listListings = async (filters = {}) => {
   if (status) {
     sql += ` AND l.status = $${index}`;
     params.push(status);
+    index++;
+  }
+
+  if (!includeUnapproved && !providerId) {
+    sql += ` AND l.approval_status = $${index}`;
+    params.push('approved');
     index++;
   }
 
@@ -71,6 +78,13 @@ const listListings = async (filters = {}) => {
     countParams.push(status);
     countIndex++;
   }
+
+  if (!includeUnapproved && !providerId) {
+    countSql += ` AND approval_status = $${countIndex}`;
+    countParams.push('approved');
+    countIndex++;
+  }
+
   if (categoryId) {
     countSql += ` AND category_id = $${countIndex}`;
     countParams.push(categoryId);
@@ -100,8 +114,16 @@ const listListings = async (filters = {}) => {
   };
 };
 
-const getListing = async (listingId, includeUnavailable = false) => {
-  const statusFilter = includeUnavailable ? '1=1' : "l.status = 'active'";
+const getListing = async (listingId, includeUnavailable = false, includeUnapproved = false) => {
+  let statusFilter = "l.status = 'active'";
+  if (includeUnavailable) {
+    statusFilter = '1=1';
+  }
+
+  let approvalFilter = "l.approval_status = 'approved'";
+  if (includeUnapproved) {
+    approvalFilter = '1=1';
+  }
 
   const result = await query(`
     SELECT l.*, c.name as category_name,
@@ -113,7 +135,7 @@ const getListing = async (listingId, includeUnavailable = false) => {
     LEFT JOIN profiles p ON p.user_id = l.provider_id
     LEFT JOIN organizations org ON org.id = l.organization_id
     LEFT JOIN listing_pricing lp ON lp.listing_id = l.id
-    WHERE l.id = $1 AND ${statusFilter}
+    WHERE l.id = $1 AND ${statusFilter} AND ${approvalFilter}
   `, [listingId]);
 
   if (result.rows.length === 0) {

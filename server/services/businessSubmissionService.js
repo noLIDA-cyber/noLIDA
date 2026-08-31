@@ -1,0 +1,220 @@
+const { query } = require('../config/database');
+const { AppError } = require('../middleware/error');
+
+const createBusinessSubmission = async (userId, submissionData) => {
+  const { authorizationCodeId, businessName, categoryId, description, services, products, pricing, businessPhone, businessEmail, website, socialMedia, location, serviceAreas, businessHours, photos, logoUrl, portfolio, documents, verificationData } = submissionData;
+
+  if (!businessName || !categoryId) {
+    throw new AppError('Business name and category are required', 400);
+  }
+
+  if (authorizationCodeId) {
+    const codeResult = await query(
+      'SELECT id FROM authorization_codes WHERE id = $1 AND status = $2 AND expires_at > NOW() AND used_count < max_uses',
+      [authorizationCodeId, 'active']
+    );
+
+    if (codeResult.rows.length === 0) {
+      throw new AppError('Invalid or expired authorization code', 400);
+    }
+  }
+
+  const existingSubmission = await query(
+    'SELECT id FROM business_submissions WHERE user_id = $1 AND status IN ($1, $2, $3)',
+    [userId, 'draft', 'pending_review', 'changes_requested']
+  );
+
+  if (existingSubmission.rows.length > 0) {
+    throw new AppError('You already have a pending business submission', 409);
+  }
+
+  const result = await query(
+    `INSERT INTO business_submissions 
+     (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
+    [userId, authorizationCodeId || null, businessName, categoryId, description || null, services || [], products || [], pricing || {}, businessPhone || null, businessEmail || null, website || null, socialMedia || {}, location || {}, serviceAreas || [], businessHours || {}, photos || [], logoUrl || null, portfolio || [], documents || [], verificationData || {}, 'pending_review']
+  );
+
+  await query(
+    'INSERT INTO approval_records (business_submission_id, admin_id, action, new_status) VALUES ($1, $2, $3, $4)',
+    [result.rows[0].id, userId, 'submitted', 'pending_review']
+  );
+
+  return result.rows[0];
+};
+
+const getBusinessSubmission = async (submissionId, userId) => {
+  const result = await query(
+    'SELECT * FROM business_submissions WHERE id = $1',
+    [submissionId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new AppError('Business submission not found', 404);
+  }
+
+  const submission = result.rows[0];
+  if (submission.user_id !== userId) {
+    throw new AppError('Access denied', 403);
+  }
+
+  return submission;
+};
+
+const listBusinessSubmissions = async (filters = {}) => {
+  const { status, userId, page = 1, limit = 20 } = filters;
+  const offset = (page - 1) * limit;
+
+  let sql = 'SELECT bs.*, u.email as user_email, p.display_name as user_name, c.name as category_name FROM business_submissions bs JOIN users u ON u.id = bs.user_id LEFT JOIN profiles p ON p.user_id = bs.user_id LEFT JOIN categories c ON c.id = bs.category_id WHERE 1=1';
+  const params = [];
+  let index = 1;
+
+  if (status) {
+    sql += ` AND bs.status = $${index}`;
+    params.push(status);
+    index++;
+  }
+
+  if (userId) {
+    sql += ` AND bs.user_id = $${index}`;
+    params.push(userId);
+    index++;
+  }
+
+  sql += ` ORDER BY bs.created_at DESC LIMIT $${index} OFFSET ${index + 1}`;
+  params.push(limit, offset);
+
+  const result = await query(sql, params);
+
+  const countResult = await query('SELECT COUNT(*) FROM business_submissions WHERE 1=1' + (status ? ' AND status = $1' : '') + (userId ? ' AND user_id = $2' : ''), status && userId ? [status, userId] : status ? [status] : userId ? [userId] : []);
+  const total = parseInt(countResult.rows[0].count);
+
+  return {
+    data: result.rows,
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+  };
+};
+
+const updateBusinessSubmissionStatus = async (submissionId, newStatus, adminId, notes) => {
+  const submissionResult = await query('SELECT * FROM business_submissions WHERE id = $1', [submissionId]);
+  if (submissionResult.rows.length === 0) {
+    throw new AppError('Business submission not found', 404);
+  }
+
+  const submission = submissionResult.rows[0];
+  const previousStatus = submission.status;
+
+  const allowedStatuses = ['approved', 'rejected', 'changes_requested', 'suspended', 'unpublished'];
+  if (!allowedStatuses.includes(newStatus)) {
+    throw new AppError(`Invalid status. Allowed: ${allowedStatuses.join(', ')}`, 400);
+  }
+
+  const updates = ['status = $1', 'updated_at = NOW()'];
+  const values = [newStatus];
+  let index = 2;
+
+  if (notes) {
+    if (newStatus === 'rejected') {
+      updates.push(`rejection_reason = $${index}`);
+    } else if (newStatus === 'changes_requested') {
+      updates.push(`changes_requested = $${index}`);
+    } else {
+      updates.push(`admin_notes = $${index}`);
+    }
+    values.push(notes);
+    index++;
+  }
+
+  if (newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'changes_requested') {
+    updates.push(`reviewed_by = $${index}`);
+    values.push(adminId);
+    index++;
+    updates.push(`reviewed_at = NOW()`);
+
+    if (newStatus === 'approved') {
+      const listingResult = await createListingFromSubmission(submission);
+      updates.push(`published_listing_id = $${index}`);
+      values.push(listingResult.id);
+      index++;
+    }
+  }
+
+  values.push(submissionId);
+
+  const result = await query(
+    `UPDATE business_submissions SET ${updates.join(', ')} WHERE id = $${index} RETURNING *`,
+    values
+  );
+
+  await query(
+    'INSERT INTO approval_records (business_submission_id, admin_id, action, previous_status, new_status, notes) VALUES ($1, $2, $3, $4, $5, $6)',
+    [submissionId, adminId, newStatus, previousStatus, newStatus, notes || null]
+  );
+
+  await query(
+    'INSERT INTO audit_logs (actor_id, action, target_type, target_id, changes) VALUES ($1, $2, $3, $4, $5)',
+    [adminId, `business_${newStatus}`, 'business_submission', submissionId, JSON.stringify({ previous_status: previousStatus, new_status: newStatus })]
+  );
+
+  return result.rows[0];
+};
+
+const createListingFromSubmission = async (submission) => {
+  const listingResult = await query(
+    `INSERT INTO listings 
+     (provider_id, category_id, title, description, status, metadata)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [
+      submission.user_id,
+      submission.category_id,
+      submission.business_name,
+      submission.description,
+      'active',
+      {
+        business_submission_id: submission.id,
+        services: submission.services,
+        products: submission.products,
+        pricing: submission.pricing,
+        business_phone: submission.business_phone,
+        business_email: submission.business_email,
+        website: submission.website,
+        social_media: submission.social_media,
+        location: submission.location,
+        service_areas: submission.service_areas,
+        business_hours: submission.business_hours,
+        photos: submission.photos,
+        logo_url: submission.logo_url,
+        portfolio: submission.portfolio,
+        documents: submission.documents,
+        verification_data: submission.verification_data,
+      }
+    ]
+  );
+
+  if (submission.photos && submission.photos.length > 0) {
+    for (const photoUrl of submission.photos) {
+      await query(
+        'INSERT INTO listing_images (listing_id, image_url, sort_order) VALUES ($1, $2, $3)',
+        [listingResult.rows[0].id, photoUrl, 0]
+      );
+    }
+  }
+
+  return listingResult.rows[0];
+};
+
+const getSubmissionApprovalHistory = async (submissionId) => {
+  const result = await query(
+    'SELECT ar.*, u.email as admin_email FROM approval_records ar JOIN users u ON u.id = ar.admin_id WHERE ar.business_submission_id = $1 ORDER BY ar.created_at ASC',
+    [submissionId]
+  );
+  return result.rows;
+};
+
+module.exports = {
+  createBusinessSubmission,
+  getBusinessSubmission,
+  listBusinessSubmissions,
+  updateBusinessSubmissionStatus,
+  getSubmissionApprovalHistory,
+};

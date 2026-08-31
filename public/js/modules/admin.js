@@ -46,6 +46,12 @@ export const initAdminPage = () => {
       } else if (tab === 'fees') {
         const data = await apiGet('/fees');
         renderFees(data.data || []);
+      } else if (tab === 'auth-codes') {
+        const data = await apiGet('/authorization-codes');
+        renderAuthCodes(data.data || []);
+      } else if (tab === 'business-approvals') {
+        const data = await apiGet('/business-submissions');
+        renderBusinessApprovals(data.data || []);
       }
     } catch (err) {
       container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
@@ -197,7 +203,190 @@ export const initAdminPage = () => {
     `;
   };
 
-  const tabs = ['users', 'risk', 'audit', 'fees'];
+  const renderAuthCodes = (codes) => {
+    container.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+        <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Authorization Codes</h1>
+        <button class="btn btn--primary btn--sm" id="generate-code-btn">Generate Code</button>
+      </div>
+      ${codes.length === 0 ? '<p style="color: var(--theme-text-secondary);">No authorization codes.</p>' : `
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--theme-border);">
+                <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Code</th>
+                <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Purpose</th>
+                <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Status</th>
+                <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Uses</th>
+                <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Expires</th>
+                <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${codes.map(c => `
+                <tr style="border-bottom: 1px solid var(--theme-border);">
+                  <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${c.code || '••••••••'}</td>
+                  <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${c.purpose}</td>
+                  <td style="padding: 0.75rem;"><span class="badge ${c.status === 'active' ? 'badge--success' : c.status === 'used' ? 'badge--primary' : 'badge--warning'}">${c.status}</span></td>
+                  <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${c.used_count || 0} / ${c.max_uses}</td>
+                  <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${formatDate(c.expires_at)}</td>
+                  <td style="padding: 0.75rem; text-align: right;">
+                    ${c.status === 'active' ? `<button class="btn btn--ghost btn--sm revoke-code" data-id="${c.id}" style="color: var(--color-danger);">Revoke</button>` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    `;
+
+    container.querySelectorAll('.revoke-code').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Revoke this authorization code?')) return;
+        try {
+          await apiDelete(`/authorization-codes/${btn.dataset.id}`);
+          showToast('Code revoked', 'success');
+          loadTab('auth-codes');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+
+    const generateBtn = document.getElementById('generate-code-btn');
+    if (generateBtn) {
+      generateBtn.addEventListener('click', () => {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+        modal.innerHTML = `
+          <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Generate Authorization Code</h3>
+              <button class="btn btn--ghost btn--sm" id="close-modal" style="color: var(--theme-text-secondary);">✕</button>
+            </div>
+            <form id="generate-code-form">
+              <div class="form-group">
+                <label class="form-label" for="code-email">Intended Email (optional)</label>
+                <input type="email" id="code-email" name="intendedEmail" class="form-input" placeholder="user@example.com" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="code-uses">Maximum Uses</label>
+                <input type="number" id="code-uses" name="maxUses" class="form-input" value="1" min="1" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="code-expiry">Expires In (days)</label>
+                <input type="number" id="code-expiry" name="expiresInDays" class="form-input" value="30" min="1" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="code-notes">Notes</label>
+                <textarea id="code-notes" name="notes" rows="2" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text); resize: vertical;"></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary btn--block">Generate Code</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('close-modal').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        document.getElementById('generate-code-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = 'Generating...';
+
+          try {
+            const formData = new FormData(e.target);
+            const data = await apiPost('/authorization-codes', {
+              intendedEmail: formData.get('intendedEmail') || null,
+              maxUses: parseInt(formData.get('maxUses')) || 1,
+              expiresInDays: parseInt(formData.get('expiresInDays')) || 30,
+              notes: formData.get('notes') || null,
+            });
+            alert(`Authorization code generated:\n\n${data.data.code}\n\nShare this code with the user. It will not be shown again.`);
+            modal.remove();
+            loadTab('auth-codes');
+          } catch (err) {
+            showToast(err.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Generate Code';
+          }
+        });
+      });
+    }
+  };
+
+  const renderBusinessApprovals = (submissions) => {
+    container.innerHTML = `
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1.5rem;">Business Approvals</h1>
+      ${submissions.length === 0 ? '<p style="color: var(--theme-text-secondary);">No pending submissions.</p>' : `
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${submissions.map(s => `
+            <div class="card" style="padding: 1.5rem; border: 1px solid var(--theme-border);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <div>
+                  <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0 0 0.25rem;">${s.business_name}</h3>
+                  <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${s.category_name || 'No category'} · ${s.user_email || s.user_name || 'Unknown user'}</p>
+                </div>
+                <span class="badge badge--warning">${s.status}</span>
+              </div>
+              <p style="color: var(--theme-text-secondary); font-size: var(--text-sm); margin: 0 0 1rem;">${s.description || 'No description provided.'}</p>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn--primary btn--sm approve-submission" data-id="${s.id}">Approve</button>
+                <button class="btn btn--ghost btn--sm request-changes" data-id="${s.id}" style="color: var(--color-warning);">Request Changes</button>
+                <button class="btn btn--ghost btn--sm reject-submission" data-id="${s.id}" style="color: var(--color-danger);">Reject</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    `;
+
+    container.querySelectorAll('.approve-submission').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          await apiPatch(`/business-submissions/${btn.dataset.id}/status`, { status: 'approved' });
+          showToast('Business approved', 'success');
+          loadTab('business-approvals');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+
+    container.querySelectorAll('.reject-submission').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const reason = prompt('Rejection reason:');
+        if (!reason) return;
+        try {
+          await apiPatch(`/business-submissions/${btn.dataset.id}/status`, { status: 'rejected', notes: reason });
+          showToast('Business rejected', 'success');
+          loadTab('business-approvals');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+
+    container.querySelectorAll('.request-changes').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const notes = prompt('Changes requested:');
+        if (!notes) return;
+        try {
+          await apiPatch(`/business-submissions/${btn.dataset.id}/status`, { status: 'changes_requested', notes });
+          showToast('Changes requested', 'success');
+          loadTab('business-approvals');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+  };
+
+  const tabs = ['users', 'risk', 'audit', 'fees', 'auth-codes', 'business-approvals'];
   container.innerHTML = `
     <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--theme-border); padding-bottom: 0.5rem;">
       ${tabs.map(t => `<button class="btn btn--${currentTab === t ? 'primary' : 'ghost'} btn--sm tab-btn" data-tab="${t}">${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}

@@ -6,7 +6,9 @@ const { sendSuccess, sendPaginated } = require('../utils/response');
 
 router.get('/', async (req, res, next) => {
   try {
-    const result = await listListings(req.query);
+    const isProvider = req.query.providerId === 'true' || req.query.providerId;
+    const includeUnapproved = req.query.includeUnapproved === 'true';
+    const result = await listListings({ ...req.query, includeUnapproved: includeUnapproved || isProvider });
     sendPaginated(res, result.data, result.pagination.total, result.pagination.page, result.pagination.limit);
   } catch (error) {
     next(error);
@@ -15,7 +17,8 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const listing = await getListing(req.params.id);
+    const isOwner = req.query.owner === 'true';
+    const listing = await getListing(req.params.id, false, isOwner);
     sendSuccess(res, listing);
   } catch (error) {
     next(error);
