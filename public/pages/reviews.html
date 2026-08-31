@@ -51,5 +51,22 @@
 
   <script type="module" src="/js/app.js?v=16"></script>
   <script type="module" src="/js/modules/reviews.js?v=16"></script>
+  <script type="module">
+    const profileBtn = document.getElementById('profile-btn');
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        const drawer = document.getElementById('profile-drawer');
+        if (drawer) {
+          drawer.style.transform = 'translateX(0)';
+          const backdrop = document.getElementById('profile-drawer-backdrop');
+          if (backdrop) backdrop.classList.remove('hidden');
+        } else {
+          window.location.href = '/';
+        }
+      });
+    }
+  </script>
 </body>
 </html>
+
+
