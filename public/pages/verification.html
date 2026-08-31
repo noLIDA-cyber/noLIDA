@@ -214,10 +214,6 @@
           </div>
           <form id="identity-form">
             <div class="form-group">
-              <label class="form-label form-label--required" for="doc-number">Document Number</label>
-              <input type="text" id="doc-number" name="documentType" class="form-input" placeholder="Enter your document number" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
-            </div>
-            <div class="form-group">
               <label class="form-label form-label--required" for="doc-file">Document Image</label>
               <input type="file" id="doc-file" name="document" accept="image/*" required class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
               <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary); margin-top: 0.25rem;">Accepted: JPG, PNG, WebP. Max 10MB.</p>
@@ -263,7 +259,6 @@
 
           await apiPost('/verification', {
             type: 'identity',
-            documentType: form.documentType.value,
             documentUrl: uploadData.url,
             documentCategory: docType,
           });

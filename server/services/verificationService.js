@@ -3,7 +3,7 @@ const { AppError } = require('../middleware/error');
 const { sendSuccess, sendError } = require('../utils/response');
 
 const submitVerification = async (userId, data) => {
-  const { type, documentType, documentUrl, documentCategory, metadata = {} } = data;
+  const { type, documentUrl, documentCategory, metadata = {} } = data;
 
   if (!type) {
     throw new AppError('Verification type is required', 400);
@@ -14,10 +14,8 @@ const submitVerification = async (userId, data) => {
     throw new AppError('Invalid verification type', 400);
   }
 
-  if (type === 'identity') {
-    if (!documentType || !documentUrl) {
-      throw new AppError('Document type and document URL are required for identity verification', 400);
-    }
+  if (type === 'identity' && !documentUrl) {
+    throw new AppError('Document image is required for identity verification', 400);
   }
 
   const existingVerification = await query(
@@ -31,7 +29,7 @@ const submitVerification = async (userId, data) => {
 
   const result = await query(
     `INSERT INTO verification (user_id, type, document_type, document_url, document_category, metadata) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [userId, type, documentType || null, documentUrl || null, documentCategory || null, { ...metadata, submitted_at: new Date().toISOString() }]
+    [userId, type, null, documentUrl || null, documentCategory || null, { ...metadata, submitted_at: new Date().toISOString() }]
   );
 
   return result.rows[0];
