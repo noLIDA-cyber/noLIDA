@@ -30,7 +30,10 @@
         <span id="nav-auth" class="hidden">
           <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Bookings</a>
           <a href="/cart" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Cart</a>
-          <button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
+                  <button id="profile-btn" class="btn btn--ghost" style="color: var(--theme-text-secondary); display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem;" aria-label="Account menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </button>
+<button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
         </span>
       </nav>
     </div>
@@ -112,5 +115,23 @@
   </div>
 
   <script type="module" src="/js/search.js?v=16"></script>
+
+  <script type="module">
+    const profileBtn = document.getElementById('profile-btn');
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        const drawer = document.getElementById('profile-drawer');
+        if (drawer) {
+          drawer.style.transform = 'translateX(0)';
+          const backdrop = document.getElementById('profile-drawer-backdrop');
+          if (backdrop) backdrop.classList.remove('hidden');
+        } else {
+          window.location.href = '/';
+        }
+      });
+    }
+  </script>
 </body>
 </html>
+
+
