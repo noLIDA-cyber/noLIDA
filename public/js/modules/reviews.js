@@ -15,6 +15,20 @@ const initReviewsPage = () => {
     });
   }
 
+  const profileBtn = document.getElementById('profile-btn');
+  if (profileBtn) {
+    profileBtn.addEventListener('click', () => {
+      const drawer = document.getElementById('profile-drawer');
+      if (drawer) {
+        drawer.style.transform = 'translateX(0)';
+        const backdrop = document.getElementById('profile-drawer-backdrop');
+        if (backdrop) backdrop.classList.remove('hidden');
+      } else {
+        window.location.href = '/';
+      }
+    });
+  }
+
   const myReviewsTab = document.getElementById('tab-my-reviews');
   const providerReviewsTab = document.getElementById('tab-provider-reviews');
   const container = document.getElementById('reviews-list');
