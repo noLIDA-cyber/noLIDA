@@ -1,56 +1,86 @@
 const router = require('express').Router();
+const Joi = require('joi');
 const { authenticate } = require('../middleware/auth');
+const { requireOwnershipOrPermission } = require('../middleware/ownership');
 const { createOrder, getOrder, listOrders, updateOrderStatus } = require('../services/orderService');
-const { AppError } = require('../middleware/error');
-const { sendSuccess, sendError } = require('../utils/response');
+const { asyncHandler } = require('../middleware/error');
+const { sendSuccess, sendCreated, sendPaginated } = require('../utils/response');
+const { validateRequest, validateParams, validateQuery, paginationSchema, schemas } = require('../utils/validation');
 
-router.post('/', authenticate, async (req, res, next) => {
-  try {
-    const order = await createOrder(req.user.id, req.body);
-    sendSuccess(res, order, 201);
-  } catch (error) {
-    next(error);
-  }
+// Create new order
+const createOrderSchema = Joi.object({
+  listingId: schemas.id,
+  quantity: Joi.number().integer().min(1).required(),
+  startDate: Joi.date().iso().required(),
+  endDate: Joi.date().iso().min(Joi.ref('startDate')).required(),
+  notes: Joi.string().max(1000).optional(),
+  locationId: schemas.id.optional(),
 });
 
-router.get('/:id', authenticate, async (req, res, next) => {
-  try {
+router.post('/',
+  authenticate,
+  validateRequest(createOrderSchema),
+  asyncHandler(async (req, res) => {
+    const order = await createOrder(req.user.id, req.body);
+    sendCreated(res, order, 'Order created successfully');
+  })
+);
+
+// Get single order by ID (customer or provider only, or admin)
+router.get('/:id',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
     const order = await getOrder(req.params.id, req.user.id);
     sendSuccess(res, order);
-  } catch (error) {
-    next(error);
-  }
+  })
+);
+
+// List orders for authenticated user
+const listOrdersQuerySchema = paginationSchema.keys({
+  role: Joi.string().valid('customer', 'provider').default('customer'),
+  status: Joi.string().optional(),
 });
 
-router.get('/', authenticate, async (req, res, next) => {
-  try {
+router.get('/',
+  authenticate,
+  validateQuery(listOrdersQuerySchema, { presence: 'optional' }),
+  asyncHandler(async (req, res) => {
     const role = req.query.role || 'customer';
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
 
     const result = await listOrders(req.user.id, role, page, limit);
-    res.json({
-      success: true,
-      data: result.data,
-      pagination: result.pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+    sendPaginated(res, result.data, result.pagination.total, result.pagination.page, result.pagination.limit);
+  })
+);
+
+// Update order status (customer/provider only, admin can override)
+const updateStatusSchema = Joi.object({
+  status: Joi.string()
+    .valid('confirmed', 'in_progress', 'completed', 'cancelled', 'disputed')
+    .required(),
+  notes: Joi.string().max(500).optional(),
 });
 
-router.patch('/:id/status', authenticate, async (req, res, next) => {
-  try {
-    const { status } = req.body;
-    const order = await updateOrderStatus(req.params.id, status, req.user.id);
-    sendSuccess(res, order);
-  } catch (error) {
-    next(error);
-  }
-});
+router.patch('/:id/status',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  requireOwnershipOrPermission('order', 'orders.manage'),
+  validateRequest(updateStatusSchema),
+  asyncHandler(async (req, res) => {
+    const order = await updateOrderStatus(req.params.id, req.body.status, req.user.id);
+    sendSuccess(res, order, 200, 'Order status updated successfully');
+  })
+);
 
-router.get('/:id/receipt', authenticate, async (req, res, next) => {
-  try {
+// Get order receipt (customer/provider only, or admin)
+router.get('/:id/receipt',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
+    const { query } = require('../config/database');
+    
     const order = await getOrder(req.params.id, req.user.id);
 
     const payment = await query(
@@ -82,10 +112,8 @@ router.get('/:id/receipt', authenticate, async (req, res, next) => {
       fee_snapshot: order.fee_snapshot || {},
     };
 
-    sendSuccess(res, receipt);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, receipt, 200, 'Receipt retrieved successfully');
+  })
+);
 
 module.exports = router;

@@ -871,6 +871,16 @@ tbody tr:hover {
   font-weight: var(--weight-medium);
 }
 
+.accent-theme-card--premium {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.accent-theme-card--premium:hover {
+  transform: none;
+  border-color: var(--theme-border);
+}
+
 [data-theme="dark"] .accent-theme-card {
   border-color: #374151;
 }

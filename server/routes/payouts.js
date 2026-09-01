@@ -27,7 +27,7 @@ router.get('/', authenticate, async (req, res, next) => {
       index++;
     }
 
-    sql += ` ORDER BY p.created_at DESC LIMIT $${index} OFFSET ${index + 1}`;
+    sql += ` ORDER BY p.created_at DESC LIMIT $${index} OFFSET $${index + 1}`;
     params.push(limit, offset);
 
     const result = await query(sql, params);

@@ -20,7 +20,7 @@ const createBusinessSubmission = async (userId, submissionData) => {
   }
 
   const existingSubmission = await query(
-    'SELECT id FROM business_submissions WHERE user_id = $1 AND status IN ($1, $2, $3)',
+    'SELECT id FROM business_submissions WHERE user_id = $1 AND status IN ($2, $3, $4)',
     [userId, 'draft', 'pending_review', 'changes_requested']
   );
 
@@ -125,19 +125,39 @@ const updateBusinessSubmissionStatus = async (submissionId, newStatus, adminId, 
     index++;
   }
 
-  if (newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'changes_requested') {
-    updates.push(`reviewed_by = $${index}`);
-    values.push(adminId);
-    index++;
-    updates.push(`reviewed_at = NOW()`);
-
-    if (newStatus === 'approved') {
-      const listingResult = await createListingFromSubmission(submission);
-      updates.push(`published_listing_id = $${index}`);
-      values.push(listingResult.id);
+    if (newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'changes_requested') {
+      updates.push(`reviewed_by = $${index}`);
+      values.push(adminId);
       index++;
+      updates.push(`reviewed_at = NOW()`);
+
+      if (newStatus === 'approved') {
+        const listingResult = await createListingFromSubmission(submission);
+        updates.push(`published_listing_id = $${index}`);
+        values.push(listingResult.id);
+        index++;
+
+        const orgResult = await query(
+          `INSERT INTO organizations (name, slug, type, description, status)
+           VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+          [
+            submission.business_name,
+            submission.business_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+            'business',
+            submission.description || null,
+            'active'
+          ]
+        );
+
+        const ownerRole = await query('SELECT id FROM roles WHERE slug = $1', ['owner']);
+        if (ownerRole.rows.length > 0) {
+          await query(
+            'INSERT INTO organization_members (organization_id, user_id, role_id, status, joined_at) VALUES ($1, $2, $3, $4, NOW())',
+            [orgResult.rows[0].id, submission.user_id, ownerRole.rows[0].id, 'active']
+          );
+        }
+      }
     }
-  }
 
   values.push(submissionId);
 
@@ -193,10 +213,16 @@ const createListingFromSubmission = async (submission) => {
 
   if (submission.photos && submission.photos.length > 0) {
     for (const photoUrl of submission.photos) {
-      await query(
-        'INSERT INTO listing_images (listing_id, image_url, sort_order) VALUES ($1, $2, $3)',
-        [listingResult.rows[0].id, photoUrl, 0]
-      );
+      try {
+        await query(
+          'INSERT INTO listing_images (listing_id, image_url, sort_order) VALUES ($1, $2, $3)',
+          [listingResult.rows[0].id, photoUrl, 0]
+        );
+      } catch (error) {
+        if (error.code !== '42P01') {
+          throw error;
+        }
+      }
     }
   }
 
@@ -211,10 +237,37 @@ const getSubmissionApprovalHistory = async (submissionId) => {
   return result.rows;
 };
 
+const hasApprovedBusiness = async (userId) => {
+  const result = await query(
+    'SELECT id FROM business_submissions WHERE user_id = $1 AND status = $2 LIMIT 1',
+    [userId, 'approved']
+  );
+  return result.rows.length > 0;
+};
+
+const getApprovedBusiness = async (userId) => {
+  const result = await query(
+    'SELECT * FROM business_submissions WHERE user_id = $1 AND status = $2 LIMIT 1',
+    [userId, 'approved']
+  );
+  return result.rows[0] || null;
+};
+
+const getLatestBusinessSubmission = async (userId) => {
+  const result = await query(
+    'SELECT * FROM business_submissions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
+    [userId]
+  );
+  return result.rows[0] || null;
+};
+
 module.exports = {
   createBusinessSubmission,
   getBusinessSubmission,
   listBusinessSubmissions,
   updateBusinessSubmissionStatus,
   getSubmissionApprovalHistory,
+  hasApprovedBusiness,
+  getApprovedBusiness,
+  getLatestBusinessSubmission,
 };

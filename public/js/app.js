@@ -1,7 +1,7 @@
 window.NOLIDA_API_VERSION = 'v1';
-window.NOLIDA_FRONTEND_URL = 'http://localhost:3000';
+window.NOLIDA_FRONTEND_URL = 'http://localhost:3001';
 
-import { isAuthenticated, apiGet } from './api.js';
+import { isAuthenticated, apiGet, getCurrentUser } from './api.js';
 import './modules/theme.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -58,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (page === 'provider') {
-    import('./modules/bookings.js').then(m => m.initProviderDashboard()).catch(err => console.error('Provider module failed:', err));
   }
 
   if (page === 'customers') {
@@ -163,6 +162,7 @@ const profileIconDefault = document.getElementById('profile-icon-default');
 const profileAvatar = document.getElementById('profile-avatar');
 const notificationBtn = document.getElementById('notification-btn');
 const notificationBadge = document.getElementById('notification-badge');
+const providerDashboardLink = document.getElementById('drawer-provider-dashboard');
 
 const openDrawer = () => {
   if (!drawer || !drawerBackdrop) return;
@@ -236,6 +236,7 @@ const updateDrawerState = () => {
       drawerUserEmail.textContent = user.email || '';
     }
     updateDrawerAvatar();
+    updateProviderLinkVisibility();
   } else {
     drawerGuest.style.display = 'block';
     drawerUser.style.display = 'none';
@@ -247,6 +248,26 @@ const updateDrawerState = () => {
     if (drawerAvatarIcon) {
       drawerAvatarIcon.style.display = 'block';
     }
+    if (providerDashboardLink) {
+      providerDashboardLink.style.display = 'none';
+    }
+  }
+};
+
+const updateProviderLinkVisibility = async () => {
+  if (!providerDashboardLink) return;
+  try {
+    const response = await fetch('/api/v1/users/business-status', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      providerDashboardLink.style.display = data.data?.approved ? 'flex' : 'none';
+    } else {
+      providerDashboardLink.style.display = 'none';
+    }
+  } catch (e) {
+    providerDashboardLink.style.display = 'none';
   }
 };
 

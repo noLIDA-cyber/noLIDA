@@ -53,22 +53,6 @@ const initAuthPage = () => {
     });
   }
 
-  document.querySelectorAll('.password-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.dataset.target;
-      const input = document.getElementById(targetId);
-      if (!input) return;
-      const isPassword = input.type === 'password';
-      input.type = isPassword ? 'text' : 'password';
-      const eyeOpen = btn.querySelector('.eye-open');
-      const eyeClosed = btn.querySelector('.eye-closed');
-      if (eyeOpen && eyeClosed) {
-        eyeOpen.classList.toggle('hidden', !isPassword);
-        eyeClosed.classList.toggle('hidden', isPassword);
-      }
-    });
-  });
-
   const googleBtn = document.getElementById('google-signin');
   if (googleBtn) {
     googleBtn.addEventListener('click', async () => {

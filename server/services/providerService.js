@@ -41,7 +41,7 @@ const getProviderProfile = async (providerId) => {
 };
 
 const updateProviderProfile = async (providerId, updates) => {
-  const userFields = ['display_name', 'first_name', 'last_name', 'phone', 'bio', 'country', 'timezone'];
+  const userFields = ['display_name', 'first_name', 'last_name', 'phone', 'bio', 'country', 'timezone', 'avatar_url'];
   const userUpdates = {};
   const profileUpdates = {};
 

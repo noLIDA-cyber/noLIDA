@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -13,26 +13,46 @@
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="provider">
-  <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
+    <header class="header" style="position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--theme-header-bg); border-bottom: 1px solid var(--theme-border); z-index: var(--z-sticky); display: flex; align-items: center; backdrop-filter: blur(12px);">
     <div class="container flex items-center justify-between" style="height: 100%;">
       <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
         <img src="/assets/images/noLIDA.jpg" alt="noLIDA" style="height: 32px; width: auto;">
         <span style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">noLIDA</span>
       </a>
       <nav class="nav-links flex items-center gap-2 sm:gap-3">
-        <a href="/dashboard" class="btn btn--ghost" style="color: var(--theme-text-secondary);">← Dashboard</a>
-        <a href="/bookings" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Bookings</a>
-        <a href="/customers" class="btn btn--ghost" style="color: var(--theme-text-secondary);">Customers</a>
-                <button id="profile-btn" class="btn btn--ghost" style="color: var(--theme-text-secondary); display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem;" aria-label="Account menu">
+        <a href="/" class="btn btn--ghost" style="color: var(--theme-text-secondary); display: inline-flex; align-items: center; gap: 0.25rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+          Home
+        </a>
+        <button id="profile-btn" class="btn btn--ghost" style="color: var(--theme-text-secondary); display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem;" aria-label="Account menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         </button>
-<button id="logout-btn" class="btn btn--secondary btn--sm">Sign Out</button>
       </nav>
     </div>
   </header>
 
   <main class="page">
     <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0 0 0.25rem;">Provider Dashboard</h1>
+          <p style="color: var(--theme-text-secondary); margin: 0;">Manage your business, services, and bookings.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--theme-border); padding-bottom: 0.5rem; overflow-x: auto;">
+        <button class="btn btn--primary btn--sm provider-tab" data-tab="overview">Overview</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="services">Services</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="availability">Availability</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="bookings">Bookings</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="calendar">Calendar</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="locations">Locations</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="staff">Staff</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="customers">Customers</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="analytics">Analytics</button>
+        <button class="btn btn--ghost btn--sm provider-tab" data-tab="settings">Settings</button>
+      </div>
+
       <div id="provider-content">
         <div class="loading-spinner" style="margin: 2rem auto;"></div>
       </div>
@@ -54,7 +74,909 @@
       });
     }
   </script>
-<script type="module" src="/js/app.js?v=16"></script>
+  <script type="module" src="/js/app.js?v=16"></script>
+  <script type="module">
+    import { isAuthenticated, apiGet, apiPost, apiPatch, apiDelete } from '/js/api.js';
+    import { showToast } from '/js/app.js';
+
+    if (!isAuthenticated()) {
+      window.location.href = '/auth';
+    }
+
+    const content = document.getElementById('provider-content');
+    let currentTab = 'overview';
+
+    const formatCurrency = (amount, currency = 'NGN') => {
+      if (amount === null || amount === undefined) return '--';
+      return new Intl.NumberFormat('en-NG', { style: 'currency', currency }).format(amount);
+    };
+
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '--';
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const formatTime = (timeStr) => {
+      if (!timeStr) return '';
+      const [h, m] = timeStr.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hour = h % 12 || 12;
+      return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`;
+    };
+
+    const loadTab = async (tab) => {
+      currentTab = tab;
+      content.innerHTML = '<div class="loading-spinner" style="margin: 2rem auto;"></div>';
+
+      try {
+        if (tab === 'overview') {
+          await loadOverview();
+        } else if (tab === 'services') {
+          await loadServices();
+        } else if (tab === 'availability') {
+          await loadAvailability();
+        } else if (tab === 'bookings') {
+          await loadProviderBookings();
+        } else if (tab === 'calendar') {
+          await loadCalendar();
+        } else if (tab === 'locations') {
+          await loadLocations();
+        } else if (tab === 'staff') {
+          await loadStaff();
+        } else if (tab === 'analytics') {
+          await loadAnalytics();
+        } else if (tab === 'settings') {
+          await loadProviderSettings();
+        }
+      } catch (err) {
+        content.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
+      }
+    };
+
+    const loadOverview = async () => {
+      const [statsRes, bookingsRes] = await Promise.all([
+        apiGet('/provider/dashboard'),
+        apiGet('/provider/bookings?limit=5'),
+      ]);
+
+      const stats = statsRes.data || {};
+      const recentBookings = bookingsRes.data || [];
+
+      content.innerHTML = `
+        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+          <div class="card" style="border-left: 4px solid var(--color-accent);">
+            <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.25rem;">Total Revenue</p>
+            <p style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">${formatCurrency(stats.bookings?.total_revenue || 0)}</p>
+          </div>
+          <div class="card" style="border-left: 4px solid var(--color-success);">
+            <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.25rem;">Bookings (30d)</p>
+            <p style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">${stats.bookings?.total || 0}</p>
+          </div>
+          <div class="card" style="border-left: 4px solid var(--color-purple);">
+            <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.25rem;">Active Listings</p>
+            <p style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">${stats.listings?.total || 0}</p>
+          </div>
+          <div class="card" style="border-left: 4px solid var(--color-pink);">
+            <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.25rem;">Avg Rating</p>
+            <p style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">${stats.reviews?.avg_rating ? parseFloat(stats.reviews.avg_rating).toFixed(1) : '--'}</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Upcoming Appointments</h2>
+            <button class="btn btn--primary btn--sm" onclick="window.location.href='/provider/bookings'">View All</button>
+          </div>
+          ${recentBookings.length === 0 ? `
+            <div class="empty-state">
+              <div class="empty-state__icon">📅</div>
+              <p class="empty-state__title">No upcoming appointments</p>
+              <p class="empty-state__description">Confirmed bookings will appear here.</p>
+            </div>
+          ` : `
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Customer</th>
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Service</th>
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Date</th>
+                    <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${recentBookings.map(b => `
+                    <tr style="border-bottom: 1px solid var(--theme-border);">
+                      <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${b.customer_name || 'Customer'}</td>
+                      <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${b.listing_title || 'N/A'}</td>
+                      <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${formatDate(b.booking_date)}</td>
+                      <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">${formatCurrency(b.total_amount)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      `;
+    };
+
+    const loadServices = async () => {
+      const data = await apiGet('/provider/listings');
+      const listings = data.data || [];
+
+      content.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">My Services</h2>
+          <button class="btn btn--primary btn--sm" id="add-listing-btn">Add Service</button>
+        </div>
+        ${listings.length === 0 ? `
+          <div class="empty-state">
+            <div class="empty-state__icon">📦</div>
+            <p class="empty-state__title">No services yet</p>
+            <p class="empty-state__description">Create your first service to start receiving bookings.</p>
+          </div>
+        ` : `
+          <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            ${listings.map(l => `
+              <div class="card card--interactive" style="cursor: pointer;" onclick="window.location.href='/listing/${l.id}'">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">${l.title}</h3>
+                  <span class="badge ${l.status === 'active' ? 'badge--success' : 'badge--primary'}">${l.status}</span>
+                </div>
+                <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">${l.category_name || 'General'}</p>
+                <p style="font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--theme-accent); margin: 0;">
+                  ${l.pricing_type === 'hourly' && l.base_price ? `${formatCurrency(l.base_price, l.currency)} / hr` : l.base_price ? formatCurrency(l.base_price, l.currency) : 'Contact for price'}
+                </p>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      `;
+
+      const addBtn = document.getElementById('add-listing-btn');
+      if (addBtn) {
+        addBtn.addEventListener('click', () => {
+          window.location.href = '/list-business';
+        });
+      }
+    };
+
+    const loadAvailability = async () => {
+      const data = await apiGet('/provider/availability');
+      const slots = data.data || [];
+
+      content.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Availability</h2>
+          <button class="btn btn--primary btn--sm" id="add-availability-btn">Add Slot</button>
+        </div>
+        ${slots.length === 0 ? `
+          <div class="empty-state">
+            <div class="empty-state__icon">🕐</div>
+            <p class="empty-state__title">No availability set</p>
+            <p class="empty-state__description">Set your weekly availability to start accepting bookings.</p>
+          </div>
+        ` : `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--theme-border);">
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Day</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Start</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">End</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Max Slots</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Buffer</th>
+                  <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${slots.map(s => `
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][s.day_of_week]}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${s.start_time}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${s.end_time}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${s.max_bookings_per_slot || 1}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${s.buffer_time || 0} min</td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                      <button class="btn btn--ghost btn--sm delete-availability" data-id="${s.id}" style="color: var(--color-danger);">Delete</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      `;
+
+      content.querySelectorAll('.delete-availability').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Remove this availability slot?')) return;
+          try {
+            await apiDelete(`/provider/availability/${btn.dataset.id}`);
+            showToast('Availability removed', 'success');
+            loadAvailability();
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
+        });
+      });
+
+      const addBtn = document.getElementById('add-availability-btn');
+      if (addBtn) {
+        addBtn.addEventListener('click', async () => {
+          const listingsRes = await apiGet('/provider/listings');
+          const listings = listingsRes.data || [];
+          const listingSelect = listings.length > 0
+            ? listings.map(l => `<option value="${l.id}">${l.title}</option>`).join('')
+            : '<option value="">No listings available</option>';
+
+          const modal = document.createElement('div');
+          modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+          modal.innerHTML = `
+            <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Availability</h3>
+                <button class="btn btn--ghost btn--sm" id="close-avail-modal" style="color: var(--theme-text-secondary);">✕</button>
+              </div>
+              <form id="availability-form">
+                <div class="form-group">
+                  <label class="form-label" for="av-listing">Listing</label>
+                  <select id="av-listing" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                    <option value="">Select a listing</option>
+                    ${listingSelect}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="av-day">Day</label>
+                  <select id="av-day" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                    <option value="0">Sunday</option>
+                    <option value="1" selected>Monday</option>
+                    <option value="2">Tuesday</option>
+                    <option value="3">Wednesday</option>
+                    <option value="4">Thursday</option>
+                    <option value="5">Friday</option>
+                    <option value="6">Saturday</option>
+                  </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="av-start">Start Time</label>
+                    <input type="time" id="av-start" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="av-end">End Time</label>
+                    <input type="time" id="av-end" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="av-max">Max Bookings Per Slot</label>
+                  <input type="number" id="av-max" class="form-input" value="1" min="1" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="av-buffer">Buffer Time (minutes)</label>
+                  <input type="number" id="av-buffer" class="form-input" value="0" min="0" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+                <button type="submit" class="btn btn--primary btn--block">Save Availability</button>
+              </form>
+            </div>
+          `;
+          document.body.appendChild(modal);
+
+          document.getElementById('close-avail-modal').addEventListener('click', () => modal.remove());
+          modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+          document.getElementById('availability-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = 'Saving...';
+            try {
+              await apiPost('/provider/availability', {
+                listingId: parseInt(document.getElementById('av-listing').value),
+                day_of_week: parseInt(document.getElementById('av-day').value),
+                start_time: document.getElementById('av-start').value,
+                end_time: document.getElementById('av-end').value,
+                max_bookings_per_slot: parseInt(document.getElementById('av-max').value) || 1,
+                buffer_time: parseInt(document.getElementById('av-buffer').value) || 0,
+              });
+              showToast('Availability saved', 'success');
+              modal.remove();
+              loadAvailability();
+            } catch (err) {
+              showToast(err.message, 'error');
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = 'Save Availability';
+            }
+          });
+        });
+      }
+    };
+
+    const loadProviderBookings = async () => {
+      const data = await apiGet('/provider/bookings?limit=50');
+      const bookings = data.data || [];
+
+      content.innerHTML = `
+        <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Bookings</h2>
+        ${bookings.length === 0 ? `
+          <div class="empty-state">
+            <div class="empty-state__icon">📅</div>
+            <p class="empty-state__title">No bookings yet</p>
+            <p class="empty-state__description">Bookings will appear here once customers start booking your services.</p>
+          </div>
+        ` : `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--theme-border);">
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Customer</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Service</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Date</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Status</th>
+                  <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${bookings.map(b => `
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${b.customer_name || 'Customer'}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${b.listing_title || 'N/A'}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${formatDate(b.booking_date)}</td>
+                    <td style="padding: 0.75rem;"><span class="badge badge--primary">${b.transaction_status || 'pending'}</span></td>
+                    <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">${formatCurrency(b.total_amount)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      `;
+    };
+
+    const loadCalendar = async () => {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startingDayOfWeek = firstDay.getDay();
+
+      const [availabilityRes, bookingsRes] = await Promise.all([
+        apiGet('/provider/availability'),
+        apiGet('/provider/bookings?limit=100'),
+      ]);
+
+      const availability = availabilityRes.data || [];
+      const bookings = bookingsRes.data || [];
+
+      const bookingDates = {};
+      bookings.forEach(b => {
+        if (b.booking_date) {
+          if (!bookingDates[b.booking_date]) bookingDates[b.booking_date] = [];
+          bookingDates[b.booking_date].push(b);
+        }
+      });
+
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const monthName = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      let calendarHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Calendar</h2>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn--ghost btn--sm" id="prev-month">Previous</button>
+            <button class="btn btn--ghost btn--sm" id="next-month">Next</button>
+          </div>
+        </div>
+        <div class="card" style="padding: 1.5rem;">
+          <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem; text-align: center;">${monthName}</h3>
+          <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem;">
+            ${dayNames.map(d => `<div style="text-align: center; font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--theme-text-tertiary); padding: 0.5rem;">${d}</div>`).join('')}
+      `;
+
+      for (let i = 0; i < startingDayOfWeek; i++) {
+        calendarHTML += `<div></div>`;
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayBookings = bookingDates[dateStr] || [];
+        const isToday = day === today.getDate();
+        const hasAvailability = availability.some(slot => {
+          const slotDate = new Date(currentYear, currentMonth, day);
+          return slot.day_of_week === slotDate.getDay();
+        });
+
+        calendarHTML += `
+          <div style="min-height: 80px; padding: 0.5rem; border: 1px solid var(--theme-border); border-radius: var(--radius-md); background: ${isToday ? 'var(--theme-bg-secondary)' : 'var(--theme-card-bg)'};">
+            <div style="font-size: var(--text-sm); font-weight: ${isToday ? 'var(--weight-bold)' : 'var(--weight-medium)'}; color: ${isToday ? 'var(--color-accent)' : 'var(--theme-text-primary)'}; margin-bottom: 0.25rem;">${day}</div>
+            ${hasAvailability ? `<div style="font-size: var(--text-xs); color: var(--color-success);">Available</div>` : ''}
+            ${dayBookings.map(b => `
+              <div style="font-size: var(--text-xs); color: var(--theme-text-secondary); background: var(--theme-bg-tertiary); padding: 0.25rem; border-radius: var(--radius-sm); margin-top: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${formatTime(b.start_time || '')} ${b.customer_name || 'Booking'}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      calendarHTML += `
+          </div>
+        </div>
+      `;
+
+      content.innerHTML = calendarHTML;
+
+      document.getElementById('prev-month')?.addEventListener('click', () => {
+        showToast('Previous month', 'info');
+      });
+      document.getElementById('next-month')?.addEventListener('click', () => {
+        showToast('Next month', 'info');
+      });
+    };
+
+    const loadCustomers = async () => {
+      content.innerHTML = `
+        <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Customers</h2>
+        <div class="empty-state">
+          <div class="empty-state__icon">👥</div>
+          <p class="empty-state__title">Customer management coming soon</p>
+          <p class="empty-state__description">You'll be able to view and manage your customers here.</p>
+        </div>
+      `;
+    };
+
+    const loadLocations = async () => {
+      const data = await apiGet('/locations');
+      const locations = data.data || [];
+
+      content.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Locations</h2>
+          <button class="btn btn--primary btn--sm" id="add-location-btn">Add Location</button>
+        </div>
+        ${locations.length === 0 ? `
+          <div class="empty-state">
+            <div class="empty-state__icon">📍</div>
+            <p class="empty-state__title">No locations yet</p>
+            <p class="empty-state__description">Add your business locations to help customers find you.</p>
+          </div>
+        ` : `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--theme-border);">
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Name</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">City</th>
+                  <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Phone</th>
+                  <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${locations.map(loc => `
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${loc.name}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${loc.city || '--'}</td>
+                    <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${loc.phone || '--'}</td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                      <button class="btn btn--ghost btn--sm delete-location" data-id="${loc.id}" style="color: var(--color-danger);">Delete</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      `;
+
+      content.querySelectorAll('.delete-location').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this location?')) return;
+          try {
+            await apiDelete(`/locations/${btn.dataset.id}`);
+            showToast('Location deleted', 'success');
+            loadLocations();
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
+        });
+      });
+
+      const addBtn = document.getElementById('add-location-btn');
+      if (addBtn) {
+        addBtn.addEventListener('click', async () => {
+          const modal = document.createElement('div');
+          modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+          modal.innerHTML = `
+            <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Location</h3>
+                <button class="btn btn--ghost btn--sm" id="close-location-modal" style="color: var(--theme-text-secondary);">✕</button>
+              </div>
+              <form id="location-form">
+                <div class="form-group">
+                  <label class="form-label" for="loc-name">Location Name</label>
+                  <input type="text" id="loc-name" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="loc-address">Address</label>
+                  <input type="text" id="loc-address" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="loc-city">City</label>
+                    <input type="text" id="loc-city" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="loc-state">State</label>
+                    <input type="text" id="loc-state" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="loc-phone">Phone</label>
+                  <input type="tel" id="loc-phone" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                </div>
+                <button type="submit" class="btn btn--primary btn--block">Save Location</button>
+              </form>
+            </div>
+          `;
+          document.body.appendChild(modal);
+
+          document.getElementById('close-location-modal').addEventListener('click', () => modal.remove());
+          modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+          document.getElementById('location-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = 'Saving...';
+            try {
+              await apiPost('/locations', {
+                name: document.getElementById('loc-name').value,
+                address_line1: document.getElementById('loc-address').value,
+                city: document.getElementById('loc-city').value,
+                state_province: document.getElementById('loc-state').value,
+                phone: document.getElementById('loc-phone').value,
+              });
+              showToast('Location saved', 'success');
+              modal.remove();
+              loadLocations();
+            } catch (err) {
+              showToast(err.message, 'error');
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = 'Save Location';
+            }
+          });
+        });
+      }
+    };
+
+    const loadStaff = async () => {
+      content.innerHTML = '<div class="loading-spinner" style="margin: 2rem auto;"></div>';
+
+      try {
+        const [orgsRes, rolesRes] = await Promise.all([
+          apiGet('/organizations'),
+          apiGet('/organizations/roles/all'),
+        ]);
+
+        const orgs = orgsRes.data || [];
+        const roles = rolesRes.data || [];
+
+        if (orgs.length === 0) {
+          content.innerHTML = `
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Staff & Roles</h2>
+            <div class="empty-state">
+              <div class="empty-state__icon">🏢</div>
+              <p class="empty-state__title">No organization yet</p>
+              <p class="empty-state__description">Create an organization to manage staff.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const orgId = orgs[0].id;
+        const membersRes = await apiGet(`/organizations/${orgId}/members`);
+        const members = membersRes.data || [];
+
+        content.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">Staff & Roles</h2>
+            <button class="btn btn--primary btn--sm" id="add-staff-btn">Add Staff</button>
+          </div>
+          ${members.length === 0 ? `
+            <div class="empty-state">
+              <div class="empty-state__icon">👥</div>
+              <p class="empty-state__title">No staff members yet</p>
+              <p class="empty-state__description">Add staff members to your organization.</p>
+            </div>
+          ` : `
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Member</th>
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Email</th>
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Role</th>
+                    <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${members.map(m => `
+                    <tr style="border-bottom: 1px solid var(--theme-border);">
+                      <td style="padding: 0.75rem; color: var(--theme-text-primary); font-weight: var(--weight-medium);">${m.display_name || m.first_name || 'User'}</td>
+                      <td style="padding: 0.75rem; color: var(--theme-text-secondary);">${m.email}</td>
+                      <td style="padding: 0.75rem; color: var(--theme-text-secondary);">
+                        <select class="form-input role-select" data-member-id="${m.id}" style="padding: 0.25rem 0.5rem; font-size: var(--text-xs); background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                          ${roles.map(r => `<option value="${r.id}" ${m.role_id == r.id ? 'selected' : ''}>${r.name}</option>`).join('')}
+                        </select>
+                      </td>
+                      <td style="padding: 0.75rem; text-align: right;">
+                        <button class="btn btn--ghost btn--sm remove-staff" data-member-id="${m.id}" style="color: var(--color-danger);">Remove</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        `;
+
+        content.querySelectorAll('.role-select').forEach(select => {
+          select.addEventListener('change', async () => {
+            try {
+              await apiPatch(`/organizations/${orgId}/members/${select.dataset.memberId}/role`, {
+                roleId: parseInt(select.value),
+              });
+              showToast('Role updated', 'success');
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
+          });
+        });
+
+        content.querySelectorAll('.remove-staff').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Remove this staff member?')) return;
+            try {
+              await apiDelete(`/organizations/${orgId}/members/${btn.dataset.memberId}`);
+              showToast('Staff member removed', 'success');
+              loadStaff();
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
+          });
+        });
+
+        const addBtn = document.getElementById('add-staff-btn');
+        if (addBtn) {
+          addBtn.addEventListener('click', async () => {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+            modal.innerHTML = `
+              <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                  <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Staff Member</h3>
+                  <button class="btn btn--ghost btn--sm" id="close-staff-modal" style="color: var(--theme-text-secondary);">✕</button>
+                </div>
+                <form id="staff-form">
+                  <div class="form-group">
+                    <label class="form-label form-label--required" for="staff-email">Email</label>
+                    <input type="email" id="staff-email" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label form-label--required" for="staff-role">Role</label>
+                    <select id="staff-role" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+                      <option value="">Select a role</option>
+                      ${roles.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn--primary btn--block">Add Staff</button>
+                </form>
+              </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('close-staff-modal').addEventListener('click', () => modal.remove());
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+            document.getElementById('staff-form').addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const btn = e.target.querySelector('button[type="submit"]');
+              btn.disabled = true;
+              btn.innerHTML = 'Adding...';
+              try {
+                await apiPost(`/organizations/${orgId}/members`, {
+                  email: document.getElementById('staff-email').value,
+                  roleId: parseInt(document.getElementById('staff-role').value),
+                });
+                showToast('Staff member added', 'success');
+                modal.remove();
+                loadStaff();
+              } catch (err) {
+                showToast(err.message, 'error');
+              } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Add Staff';
+              }
+            });
+          });
+        }
+      } catch (err) {
+        content.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
+      }
+    };
+
+    const loadAnalytics = async () => {
+      const data = await apiGet('/provider/earnings');
+      const { daily, totals } = data.data || { daily: [], totals: {} };
+
+      content.innerHTML = `
+        <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Analytics</h2>
+        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+          <div class="card" style="border-left: 4px solid var(--color-success);">
+            <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.25rem;">Total Revenue</p>
+            <p style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">${formatCurrency(totals?.total_revenue || 0)}</p>
+          </div>
+          <div class="card" style="border-left: 4px solid var(--color-accent);">
+            <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin-bottom: 0.25rem;">Net Earnings</p>
+            <p style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary);">${formatCurrency(totals?.total_earnings || 0)}</p>
+          </div>
+        </div>
+        ${daily.length === 0 ? `
+          <div class="empty-state">
+            <div class="empty-state__icon">📊</div>
+            <p class="empty-state__title">No analytics data yet</p>
+            <p class="empty-state__description">Analytics will appear here once you have transactions.</p>
+          </div>
+        ` : `
+          <div class="card">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Revenue (Last 90 Days)</h3>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm);">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--theme-border);">
+                    <th style="text-align: left; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Date</th>
+                    <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Revenue</th>
+                    <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Earnings</th>
+                    <th style="text-align: right; padding: 0.75rem; color: var(--theme-text-secondary); font-weight: var(--weight-medium);">Bookings</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${daily.map(d => `
+                    <tr style="border-bottom: 1px solid var(--theme-border);">
+                      <td style="padding: 0.75rem; color: var(--theme-text-primary);">${formatDate(d.date)}</td>
+                      <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary);">${formatCurrency(d.revenue)}</td>
+                      <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary);">${formatCurrency(d.earnings)}</td>
+                      <td style="padding: 0.75rem; text-align: right; color: var(--theme-text-secondary);">${d.bookings || 0}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `}
+      `;
+    };
+
+    const loadProviderSettings = async () => {
+      content.innerHTML = `
+        <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Provider Settings</h2>
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin-bottom: 1rem;">Business Information</h3>
+          <p style="color: var(--theme-text-secondary); font-size: var(--text-sm); margin-bottom: 1rem;">Update your business profile and preferences.</p>
+          <form id="provider-settings-form">
+            <div class="form-group">
+              <label class="form-label" for="provider-display-name">Display Name</label>
+              <input type="text" id="provider-display-name" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provider-bio">Bio</label>
+              <textarea id="provider-bio" rows="4" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text); resize: vertical;"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provider-phone">Phone</label>
+              <input type="tel" id="provider-phone" class="form-input" style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
+            </div>
+            <button type="submit" class="btn btn--primary">Save Changes</button>
+          </form>
+        </div>
+      `;
+
+      const form = document.getElementById('provider-settings-form');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            await apiPatch('/provider/profile', {
+              display_name: document.getElementById('provider-display-name').value,
+              bio: document.getElementById('provider-bio').value,
+              phone: document.getElementById('provider-phone').value,
+            });
+            showToast('Settings saved', 'success');
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
+        });
+      }
+    };
+
+    document.querySelectorAll('.provider-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.provider-tab').forEach(b => {
+          b.classList.remove('btn--primary');
+          b.classList.add('btn--ghost');
+        });
+        btn.classList.remove('btn--ghost');
+        btn.classList.add('btn--primary');
+        loadTab(btn.dataset.tab);
+      });
+    });
+
+    loadTab('overview');
+  </script>
+  <div id="profile-drawer-backdrop" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 998; opacity: 0; transition: opacity 0.3s ease;"></div>
+  <aside id="profile-drawer" style="position: fixed; top: 0; right: 0; bottom: 0; width: 320px; max-width: 85vw; background: var(--theme-card-bg); border-left: 1px solid var(--theme-border); z-index: 999; transform: translateX(100%); transition: transform 0.3s ease; display: flex; flex-direction: column; box-shadow: var(--shadow-xl);">
+    <div style="padding: 1.25rem; border-bottom: 1px solid var(--theme-border); display: flex; align-items: center; justify-content: space-between;">
+      <h2 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary);">Account</h2>
+      <button id="close-drawer" class="btn btn--ghost btn--sm" style="color: var(--theme-text-secondary); padding: 0.25rem;" aria-label="Close menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div id="drawer-auth-section" style="padding: 1.25rem; border-bottom: 1px solid var(--theme-border);">
+      <div id="drawer-guest" style="display: none;">
+        <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1rem;">Sign in to access your account, orders, and saved items.</p>
+        <a href="/auth" class="btn btn--primary btn--block" style="text-decoration: none; text-align: center;">Sign in</a>
+      </div>
+      <div id="drawer-user" style="display: none;">
+        <div class="flex items-center gap-3">
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--theme-bg-tertiary); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;" id="drawer-avatar-container">
+            <svg id="drawer-avatar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <img id="drawer-avatar-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+          </div>
+          <div style="min-width: 0;">
+            <p id="drawer-user-name" style="font-weight: var(--weight-semibold); color: var(--theme-text-primary); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+            <p id="drawer-user-email" style="font-size: var(--text-xs); color: var(--theme-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav id="drawer-menu" style="flex: 1; overflow-y: auto; padding: 0.5rem 0;">
+      <a href="/settings" class="drawer-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--theme-text-primary); text-decoration: none; font-size: var(--text-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 12 2v.09a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+      <a href="/bookings" class="drawer-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--theme-text-primary); text-decoration: none; font-size: var(--text-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Bookings
+      </a>
+      <a href="/cart" class="drawer-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--theme-text-primary); text-decoration: none; font-size: var(--text-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        Cart
+      </a>
+      <a href="/reviews" class="drawer-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--theme-text-primary); text-decoration: none; font-size: var(--text-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        Reviews
+      </a>
+      <a href="/account" class="drawer-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--theme-text-primary); text-decoration: none; font-size: var(--text-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        My Account
+      </a>
+      <a href="/provider" id="drawer-provider-dashboard" class="drawer-link" style="display: none; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--theme-text-primary); text-decoration: none; font-size: var(--text-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        Provider Dashboard
+      </a>
+      <button id="drawer-logout" class="drawer-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--color-danger); background: none; border: none; width: 100%; text-align: left; font-size: var(--text-sm); cursor: pointer; display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Sign out
+      </button>
+    </nav>
+  </aside>
 </body>
 </html>
 

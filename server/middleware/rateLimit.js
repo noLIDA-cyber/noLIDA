@@ -23,4 +23,4 @@ const generalLimiter = createLimiter(
   'Too many requests, please try again later.'
 );
 
-module.exports = { authLimiter, generalLimiter };
+module.exports = { authLimiter, generalLimiter, createLimiter };

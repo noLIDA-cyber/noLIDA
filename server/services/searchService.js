@@ -56,7 +56,7 @@ const searchListings = async (q, location, filters = {}) => {
   return result.rows;
 };
 
-const naturalLanguageSearch = async (queryText) => {
+const naturalLanguageSearch = async (queryText, filters = {}) => {
   const lowerQuery = queryText.toLowerCase();
   
   let categoryHint = null;
@@ -114,7 +114,8 @@ const naturalLanguageSearch = async (queryText) => {
 
   const categoryResult = categoryHint ? await query("SELECT id FROM categories WHERE name ILIKE $1 LIMIT 1", [`%${categoryHint}%`]) : { rows: [] };
 
-  const results = await searchListings(queryText, locationHint, {
+  const results = await searchListings(queryText, null, {
+    location: locationHint || filters.location,
     categoryId: categoryResult.rows[0]?.id || filters.categoryId,
     minPrice: priceHint.min || filters.minPrice,
     maxPrice: priceHint.max || filters.maxPrice,

@@ -1,5 +1,7 @@
 const router = require('express').Router();
+const Joi = require('joi');
 const { authenticate } = require('../middleware/auth');
+const { requireOrganizationRole } = require('../middleware/authorization');
 const {
   createOrganization,
   getUserOrganizations,
@@ -13,107 +15,124 @@ const {
   getRoles,
   getOrganizationStats,
 } = require('../services/organizationService');
-const { AppError } = require('../middleware/error');
-const { sendSuccess, sendError } = require('../utils/response');
+const { asyncHandler } = require('../middleware/error');
+const { sendSuccess, sendCreated, sendPaginated } = require('../utils/response');
+const { validateRequest, validateParams, organizationSchemas, schemas } = require('../utils/validation');
 
-router.get('/', authenticate, async (req, res, next) => {
-  try {
+// Get user's organizations
+router.get('/',
+  authenticate,
+  asyncHandler(async (req, res) => {
     const organizations = await getUserOrganizations(req.user.id);
     sendSuccess(res, organizations);
-  } catch (error) {
-    next(error);
-  }
-});
+  })
+);
 
-router.get('/:id', authenticate, async (req, res, next) => {
-  try {
+// Get single organization
+router.get('/:id',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
     const organization = await getOrganization(req.params.id, req.user.id);
     sendSuccess(res, organization);
-  } catch (error) {
-    next(error);
-  }
-});
+  })
+);
 
-router.post('/', authenticate, async (req, res, next) => {
-  try {
+// Create new organization
+router.post('/',
+  authenticate,
+  validateRequest(organizationSchemas.create),
+  asyncHandler(async (req, res) => {
     const organization = await createOrganization(req.user.id, req.body);
-    sendSuccess(res, organization, 201);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendCreated(res, organization, 'Organization created successfully');
+  })
+);
 
-router.patch('/:id', authenticate, async (req, res, next) => {
-  try {
+// Update organization (owner only)
+router.patch('/:id',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  requireOrganizationRole('owner', { paramName: 'id' }),
+  validateRequest(organizationSchemas.update),
+  asyncHandler(async (req, res) => {
     const organization = await updateOrganization(req.params.id, req.user.id, req.body);
-    sendSuccess(res, organization);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, organization, 200, 'Organization updated successfully');
+  })
+);
 
-router.delete('/:id', authenticate, async (req, res, next) => {
-  try {
+// Delete organization (owner only)
+router.delete('/:id',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  requireOrganizationRole('owner', { paramName: 'id' }),
+  asyncHandler(async (req, res) => {
     const result = await deleteOrganization(req.params.id, req.user.id);
-    sendSuccess(res, result);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, result, 200, 'Organization deleted successfully');
+  })
+);
 
-router.get('/:id/members', authenticate, async (req, res, next) => {
-  try {
+// Get organization members
+router.get('/:id/members',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
     const members = await getOrganizationMembers(req.params.id, req.user.id);
     sendSuccess(res, members);
-  } catch (error) {
-    next(error);
-  }
-});
+  })
+);
 
-router.post('/:id/members', authenticate, async (req, res, next) => {
-  try {
+// Add organization member (owner only)
+router.post('/:id/members',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  requireOrganizationRole('owner', { paramName: 'id' }),
+  validateRequest(organizationSchemas.addMember),
+  asyncHandler(async (req, res) => {
     const member = await addOrganizationMember(req.params.id, req.user.id, req.body);
-    sendSuccess(res, member, 201);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendCreated(res, member, 'Member added successfully');
+  })
+);
 
-router.delete('/:id/members/:memberId', authenticate, async (req, res, next) => {
-  try {
+// Remove organization member (owner only)
+router.delete('/:id/members/:memberId',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id, memberId: schemas.id }),
+  requireOrganizationRole('owner', { paramName: 'id' }),
+  asyncHandler(async (req, res) => {
     const result = await removeOrganizationMember(req.params.id, req.user.id, req.params.memberId);
-    sendSuccess(res, result);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, result, 200, 'Member removed successfully');
+  })
+);
 
-router.patch('/:id/members/:memberId/role', authenticate, async (req, res, next) => {
-  try {
-    const { roleId } = req.body;
-    const member = await updateMemberRole(req.params.id, req.user.id, req.params.memberId, roleId);
-    sendSuccess(res, member);
-  } catch (error) {
-    next(error);
-  }
-});
+// Update member role (owner only)
+router.patch('/:id/members/:memberId/role',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id, memberId: schemas.id }),
+  requireOrganizationRole('owner', { paramName: 'id' }),
+  validateRequest(organizationSchemas.updateMemberRole),
+  asyncHandler(async (req, res) => {
+    const member = await updateMemberRole(req.params.id, req.user.id, req.params.memberId, req.body.roleId);
+    sendSuccess(res, member, 200, 'Member role updated successfully');
+  })
+);
 
-router.get('/:id/stats', authenticate, async (req, res, next) => {
-  try {
+// Get organization stats
+router.get('/:id/stats',
+  authenticate,
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
     const stats = await getOrganizationStats(req.params.id, req.user.id);
     sendSuccess(res, stats);
-  } catch (error) {
-    next(error);
-  }
-});
+  })
+);
 
-router.get('/roles/all', authenticate, async (req, res, next) => {
-  try {
+// Get available roles
+router.get('/roles/all',
+  authenticate,
+  asyncHandler(async (req, res) => {
     const roles = await getRoles();
     sendSuccess(res, roles);
-  } catch (error) {
-    next(error);
-  }
-});
+  })
+);
 
 module.exports = router;

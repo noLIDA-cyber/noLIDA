@@ -1,5 +1,5 @@
 const API_BASE = `/api/${window.NOLIDA_API_VERSION || 'v1'}`;
-const FRONTEND_URL = window.NOLIDA_FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = window.NOLIDA_FRONTEND_URL || 'http://localhost:3001';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('accessToken');

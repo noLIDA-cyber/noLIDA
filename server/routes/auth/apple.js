@@ -3,6 +3,7 @@ const { authenticate } = require('../../middleware/auth');
 const { authenticateWithApple } = require('../../services/appleAuthService');
 const { generateTokens } = require('../../utils/crypto');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { AppError } = require('../../middleware/error');
 
 router.post('/apple', async (req, res, next) => {
   try {

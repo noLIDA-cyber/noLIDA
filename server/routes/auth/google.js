@@ -3,6 +3,7 @@ const { authenticate } = require('../../middleware/auth');
 const { authenticateWithGoogle } = require('../../services/googleAuthService');
 const { generateTokens } = require('../../utils/crypto');
 const { sendSuccess, sendError } = require('../../utils/response');
+const { AppError } = require('../../middleware/error');
 
 router.post('/google', async (req, res, next) => {
   try {

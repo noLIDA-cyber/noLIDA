@@ -113,7 +113,8 @@ const getCustomerDetail = async (providerId, customerId) => {
   const reviewsResult = await query(
     `SELECT r.*, l.title as listing_title
      FROM reviews r
-     JOIN listings l ON l.id = r.listing_id
+     JOIN transactions t ON t.id = r.transaction_id
+     JOIN listings l ON l.id = t.listing_id
      WHERE r.provider_id = $1 AND r.customer_id = $2
      ORDER BY r.created_at DESC
      LIMIT 10`,

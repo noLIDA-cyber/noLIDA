@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { sendSuccess } = require('../utils/response');
 
-router.get('/health', (req, res) => {
+router.get('/', (req, res) => {
   sendSuccess(res, {
     status: 'healthy',
     timestamp: new Date().toISOString(),

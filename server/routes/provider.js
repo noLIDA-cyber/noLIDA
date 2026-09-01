@@ -2,11 +2,28 @@ const router = require('express').Router();
 const { authenticate } = require('../middleware/auth');
 const { getProviderProfile, updateProviderProfile, getProviderStats } = require('../services/providerService');
 const { listListings } = require('../services/listingService');
-const { listBookings, getAvailableSlots, getProviderAvailableDates } = require('../services/bookingService');
+const { listBookings } = require('../services/bookingService');
+const { hasApprovedBusiness } = require('../services/businessSubmissionService');
 const { AppError } = require('../middleware/error');
 const { sendSuccess } = require('../utils/response');
+const { query } = require('../config/database');
 
-router.get('/profile', authenticate, async (req, res, next) => {
+const requireBusinessApproval = async (req, res, next) => {
+  try {
+    const approved = await hasApprovedBusiness(req.user.id);
+    if (!approved) {
+      throw new AppError('Business approval required to access provider features', 403);
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+router.use(authenticate);
+router.use(requireBusinessApproval);
+
+router.get('/profile', async (req, res, next) => {
   try {
     const profile = await getProviderProfile(req.user.id);
     sendSuccess(res, profile);
@@ -15,7 +32,7 @@ router.get('/profile', authenticate, async (req, res, next) => {
   }
 });
 
-router.patch('/profile', authenticate, async (req, res, next) => {
+router.patch('/profile', async (req, res, next) => {
   try {
     const profile = await updateProviderProfile(req.user.id, req.body);
     sendSuccess(res, profile);
@@ -24,7 +41,7 @@ router.patch('/profile', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/dashboard', authenticate, async (req, res, next) => {
+router.get('/dashboard', async (req, res, next) => {
   try {
     const stats = await getProviderStats(req.user.id);
     const bookings = await listBookings(req.user.id, 'provider', 1, 20, { status: 'confirmed' });
@@ -39,7 +56,7 @@ router.get('/dashboard', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/listings', authenticate, async (req, res, next) => {
+router.get('/listings', async (req, res, next) => {
   try {
     const result = await listListings({ providerId: req.user.id, limit: 100 });
     sendSuccess(res, result.data);
@@ -48,7 +65,7 @@ router.get('/listings', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/bookings', authenticate, async (req, res, next) => {
+router.get('/bookings', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -84,7 +101,7 @@ router.get('/bookings', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/availability', authenticate, async (req, res, next) => {
+router.get('/availability', async (req, res, next) => {
   try {
     const { listingId } = req.query;
 
@@ -103,7 +120,7 @@ router.get('/availability', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/availability', authenticate, async (req, res, next) => {
+router.post('/availability', async (req, res, next) => {
   try {
     const { listingId, day_of_week, start_time, end_time, break_start, break_end, max_bookings_per_slot, buffer_time } = req.body;
 
@@ -135,7 +152,7 @@ router.post('/availability', authenticate, async (req, res, next) => {
   }
 });
 
-router.delete('/availability/:id', authenticate, async (req, res, next) => {
+router.delete('/availability/:id', async (req, res, next) => {
   try {
     const result = await query(
       'DELETE FROM listing_availability WHERE id = $1 AND listing_id IN (SELECT id FROM listings WHERE provider_id = $2) RETURNING id',
@@ -152,7 +169,7 @@ router.delete('/availability/:id', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/earnings', authenticate, async (req, res, next) => {
+router.get('/earnings', async (req, res, next) => {
   try {
     const result = await query(
       `SELECT DATE(created_at) as date, 

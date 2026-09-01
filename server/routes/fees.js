@@ -1,14 +1,19 @@
 const router = require('express').Router();
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/authorization');
 const { createFee, getFees, getFee, updateFee, deleteFee } = require('../services/feeService');
-const { AppError } = require('../middleware/error');
-const { sendSuccess, sendError } = require('../utils/response');
+const { asyncHandler } = require('../middleware/error');
+const { sendSuccess, sendCreated, sendPaginated } = require('../utils/response');
+const { validateRequest, validateParams, validateQuery, paginationSchema, feeSchemas, schemas } = require('../utils/validation');
 
+// Admin routes - require authentication and permissions
 router.use(authenticate);
-router.use(authorize('super_admin', 'admin'));
 
-router.get('/', async (req, res, next) => {
-  try {
+// List fees (requires settings.manage or view permission)
+router.get('/',
+  requirePermission(['settings.manage', 'reports.view'], { mode: 'any' }),
+  validateQuery(paginationSchema, { presence: 'optional' }),
+  asyncHandler(async (req, res) => {
     const filters = {};
     if (req.query.type) filters.type = req.query.type;
     if (req.query.categoryId) filters.categoryId = parseInt(req.query.categoryId);
@@ -17,46 +22,49 @@ router.get('/', async (req, res, next) => {
     if (req.query.active !== undefined) filters.active = req.query.active === 'true';
 
     const fees = await getFees(filters);
-    sendSuccess(res, fees);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, fees, 200, 'Fees retrieved successfully');
+  })
+);
 
-router.get('/:id', async (req, res, next) => {
-  try {
+// Get single fee
+router.get('/:id',
+  requirePermission(['settings.manage', 'reports.view'], { mode: 'any' }),
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
     const fee = await getFee(req.params.id);
-    sendSuccess(res, fee);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, fee, 200, 'Fee retrieved successfully');
+  })
+);
 
-router.post('/', async (req, res, next) => {
-  try {
+// Create fee (requires settings.manage permission)
+router.post('/',
+  requirePermission('settings.manage'),
+  validateRequest(feeSchemas.create),
+  asyncHandler(async (req, res) => {
     const fee = await createFee(req.body);
-    sendSuccess(res, fee, 201);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendCreated(res, fee, 'Fee created successfully');
+  })
+);
 
-router.patch('/:id', async (req, res, next) => {
-  try {
+// Update fee (requires settings.manage permission)
+router.patch('/:id',
+  requirePermission('settings.manage'),
+  validateParams(Joi.object({ id: schemas.id }),
+  validateRequest(feeSchemas.update),
+  asyncHandler(async (req, res) => {
     const fee = await updateFee(req.params.id, req.body);
-    sendSuccess(res, fee);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, fee, 200, 'Fee updated successfully');
+  })
+);
 
-router.delete('/:id', async (req, res, next) => {
-  try {
+// Delete fee (requires settings.manage permission)
+router.delete('/:id',
+  requirePermission('settings.manage'),
+  validateParams(Joi.object({ id: schemas.id }),
+  asyncHandler(async (req, res) => {
     const result = await deleteFee(req.params.id);
-    sendSuccess(res, result);
-  } catch (error) {
-    next(error);
-  }
-});
+    sendSuccess(res, result, 200, 'Fee deleted successfully');
+  })
+);
 
 module.exports = router;
