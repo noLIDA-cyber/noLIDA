@@ -11,5 +11,5 @@
 // Leave both empty for local dev — the frontend will fall back to
 // same-origin /api/v1/* which hits the local Express server.
 
-window.NOLIDA_API_BASE = '';
-window.NOLIDA_FRONTEND_URL = '';
+window.NOLIDA_API_BASE = 'nolida-production.up.railway.app';
+window.NOLIDA_FRONTEND_URL = 'http://no-lida-blush.vercel.app/';
