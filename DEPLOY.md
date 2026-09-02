@@ -24,8 +24,21 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
 
 5. **Bootstrap the database** — runs all 16 migrations + both seeds in one command. From your local machine:
 
+   **macOS / Linux (bash, zsh):**
    ```bash
    export DATABASE_URL='<paste the Supabase transaction-pooler URL here>'
+   npm run bootstrap
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   $env:DATABASE_URL='<paste the Supabase transaction-pooler URL here>'
+   npm run bootstrap
+   ```
+
+   **Windows (cmd):**
+   ```cmd
+   set DATABASE_URL=<paste the Supabase transaction-pooler URL here>
    npm run bootstrap
    ```
 
