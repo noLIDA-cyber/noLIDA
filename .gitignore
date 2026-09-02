@@ -14,4 +14,3 @@ coverage/
 *.swp
 *.swo
 *~
-public/config.js

@@ -108,26 +108,20 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
 
 1. Go to https://vercel.com → **Add New → Project** → import the GitHub repo.
 2. Vercel auto-detects `vercel.json`. Do not change the framework setting.
-3. **Critical:** create the runtime config file. From the repo root:
-
-   ```bash
-   cp public/config.example.js public/config.js
-   ```
-
-   Edit `public/config.js` to contain your Railway URL:
+3. **The runtime config is already in the repo.** Open `public/config.js` and set your URLs:
 
    ```js
-   window.NOLIDA_API_BASE = 'https://nolida-api-production.up.railway.app';
-   window.NOLIDA_FRONTEND_URL = 'https://nolida.vercel.app';
+   window.NOLIDA_API_BASE = 'https://YOUR-RAILWAY-URL.up.railway.app';
+   window.NOLIDA_FRONTEND_URL = 'https://YOUR-VERCEL-URL.vercel.app';
    ```
 
-   `public/config.js` is gitignored so each developer can have their own without conflicts. **For Vercel, you need to commit and push it** so Vercel actually deploys it. (Yes, this means the URL is in your public repo. That's OK — it's a public URL, not a secret.)
+   The file is committed to the repo (not gitignored) so Vercel picks it up. For local dev, leave both as empty strings.
 
 4. Commit and push:
 
    ```bash
    git add public/config.js
-   git commit -m "Set Vercel API base URL"
+   git commit -m "Set deployed API base URL"
    git push
    ```
 
