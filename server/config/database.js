@@ -1,5 +1,11 @@
 const { Pool } = require('pg');
+const dns = require('dns');
 require('dotenv').config();
+
+if (process.env.DNS_FALLBACK === '1') {
+  dns.setServers(['1.1.1.1', '8.8.8.8']);
+  console.log('Using DNS fallback servers: 1.1.1.1, 8.8.8.8');
+}
 
 const isLocalDatabase = (process.env.DATABASE_URL || '').includes('localhost') ||
                         (process.env.DATABASE_URL || '').includes('127.0.0.1');
