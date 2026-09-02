@@ -57,7 +57,22 @@ app.use(helmet({
   },
 }));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowed = process.env.CORS_ORIGIN;
+    if (!allowed) {
+      return callback(null, true);
+    }
+    const allowedList = allowed.split(',').map(o => o.trim()).filter(Boolean);
+    if (!origin) {
+      return callback(null, true);
+    }
+    const normalize = (s) => s.replace(/\/+$/, '').toLowerCase();
+    const matched = allowedList.find(o => normalize(o) === normalize(origin));
+    if (matched) {
+      return callback(null, origin);
+    }
+    return callback(null, false);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
