@@ -8,4 +8,3 @@ server
 uploads
 *.log
 .DS_Store
-public/config.js
