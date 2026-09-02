@@ -11,6 +11,8 @@
     "seed:admin": "node server/seeds/seedAdmin.js",
     "bootstrap": "node server/db/migrate.js && node server/seeds/seed.js && node server/seeds/seedAdmin.js",
     "db:diagnose": "node server/scripts/diagnose-db.js",
+    "db:diagnose-state": "node server/scripts/diagnose-state.js",
+    "db:mark-014": "node server/scripts/mark-014-applied.js",
     "test": "node --test server/tests/health.test.js server/tests/auth.test.js server/tests/fee.test.js server/tests/payment.test.js",
     "test:validation": "node --test server/tests/validation-integration.test.js",
     "lint": "echo \"No linter configured yet\""
