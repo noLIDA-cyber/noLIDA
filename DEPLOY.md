@@ -3,11 +3,11 @@
 This guide deploys noLIDA as three separate services:
 
 - **Supabase** — Managed PostgreSQL
-- **Render** — Node.js backend (Express)
+- **Railway** — Node.js backend (Express)
 - **Vercel** — Static frontend (HTML/CSS/JS)
-- **GitHub** — Source of truth, auto-deploys to both Render and Vercel
+- **GitHub** — Source of truth, auto-deploys to both Railway and Vercel
 
-The Express backend is **not** converted to serverless. It runs as a long-lived Node service on Render. The frontend is pure static files served from Vercel's global CDN.
+The Express backend is **not** converted to serverless. It runs as a long-lived Node service on Railway. The frontend is pure static files served from Vercel's global CDN.
 
 ---
 
@@ -43,59 +43,85 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
 6. Run the seed scripts:
 
    ```bash
-   DATABASE_URL=... node server/seeds/seed.js
-   DATABASE_URL=... node server/seeds/seedAdmin.js
+   DATABASE_URL=<supabase-url> node server/seeds/seed.js
+   DATABASE_URL=<supabase-url> node server/seeds/seedAdmin.js
    ```
 
-   Record the admin email/password the seed script prints.
+   The admin seed prints the email and password. The default credentials are:
+   - Email: `nolidacreations@gmail.com`
+   - Password: `nolidaiscomingsoon100.`
 
 ---
 
-## 2. Render (backend)
+## 2. Railway (backend)
 
 1. Push this repo to GitHub
-2. Go to https://render.com → **New → Blueprint**
-3. Connect the GitHub repo. Render will read `render.yaml` and provision a `nolida-api` web service.
-4. In the Render dashboard for `nolida-api` → **Environment**, set the values flagged `sync: false` in `render.yaml`. The most important:
+2. Go to https://railway.app → **New Project → Deploy from GitHub repo** → select this repo
+3. Railway auto-detects Node and uses the `Procfile` (`web: node server/app.js`)
+4. In **Variables**, set the values that `railway.toml` did not pre-fill. The most important:
 
-   - `DATABASE_URL` — the Supabase Transaction pooler URL from step 1
-   - `CORS_ORIGIN`, `FRONTEND_URL`, `APP_URL` — your Vercel URL (you can set this now to a placeholder and update after step 3)
-   - `FLUTTERWAVE_SECRET_KEY`, `GOOGLE_MAPS_API_KEY`, etc. — only what you use
+   | Key | Value |
+   |---|---|
+   | `DATABASE_URL` | the Supabase Transaction pooler URL from step 1 |
+   | `JWT_ACCESS_SECRET` | a random 32+ char string (e.g. `openssl rand -hex 32`) |
+   | `JWT_REFRESH_SECRET` | another random 32+ char string |
+   | `CORS_ORIGIN` | your Vercel URL (placeholder OK for now, update in step 3) |
+   | `FRONTEND_URL` | your Vercel URL |
+   | `APP_URL` | your Vercel URL |
+   | `FLUTTERWAVE_SECRET_KEY` | only if you use payments |
+   | `GOOGLE_MAPS_API_KEY` | only if you use maps |
 
-5. Add a **Persistent Disk** to the service:
-   - Mount path: `/opt/render/project/src/uploads`
-   - Size: 1 GB (or more if you store many images)
-   - This is where uploaded files live. They survive deploys.
+5. **Persistent disk (paid plans only):**
+   - Service → **Settings → Volumes → Add Volume**
+   - Mount path: `/app/uploads`
+   - Size: 1 GB
+   - Set `STORAGE_LOCAL_PATH=/app/uploads` in variables
+   - This is where uploaded files live. They survive redeploys.
+   - On the free trial/hobby plan, no persistent disk — uploads will be wiped on redeploy. Acceptable for a demo, not for production.
 
-6. Wait for the first deploy. Visit `https://nolida-api.onrender.com/api/v1/health` — should return `{"success": true}`.
+6. After deploy, Railway gives you a URL like `https://nolida-api-production.up.railway.app`. Test:
 
-7. (Free tier only) Render spins down after 15 min of inactivity. First request takes ~30s. Upgrade to a paid plan to avoid this.
+   ```bash
+   curl https://nolida-api-production.up.railway.app/api/v1/health
+   ```
+
+   Should return `{"success":true,...}`.
 
 ---
 
 ## 3. Vercel (frontend)
 
 1. Go to https://vercel.com → **Add New → Project** → import the GitHub repo.
-2. Vercel auto-detects `vercel.json` and uses it. You should NOT need to set the framework to "Other".
-3. In **Project Settings → Environment Variables**, add:
+2. Vercel auto-detects `vercel.json`. Do not change the framework setting.
+3. **Critical:** create the runtime config file. From the repo root:
 
-   | Key | Value |
-   |---|---|
-   | `NOLIDA_API_BASE` | `https://nolida-api.onrender.com` |
-   | `NOLIDA_FRONTEND_URL` | (your Vercel URL, e.g. `https://nolida.vercel.app`) |
-
-   Note: these are read by `public/js/api.js` via `window.NOLIDA_*`. Vercel only injects them at build time as `process.env.*`, so you need a small Vercel Edge config or build step. The simplest path: copy `public/config.example.js` to `public/config.js`, edit the values, and commit it. The `.vercelignore` file is set to ignore `config.js` so it doesn't get deployed — but for a static site, committing the file with the URLs is the easiest path.
-
-   **Actually**, Vercel supports build-time env vars with a tiny build step. If you want zero-touch env injection, add this to `vercel.json`:
-
-   ```json
-   "buildCommand": "node build-config.js"
+   ```bash
+   cp public/config.example.js public/config.js
    ```
 
-   And create `build-config.js` that reads `process.env.NOLIDA_API_BASE` and writes `public/config.js`. Otherwise, just commit a `public/config.js` with hardcoded URLs.
+   Edit `public/config.js` to contain your Railway URL:
 
-4. Update Render's `CORS_ORIGIN` and `FRONTEND_URL` to match your actual Vercel URL.
-5. Visit your Vercel URL. The frontend should load and API calls should reach the Render backend.
+   ```js
+   window.NOLIDA_API_BASE = 'https://nolida-api-production.up.railway.app';
+   window.NOLIDA_FRONTEND_URL = 'https://nolida.vercel.app';
+   ```
+
+   `public/config.js` is gitignored so each developer can have their own without conflicts. **For Vercel, you need to commit and push it** so Vercel actually deploys it. (Yes, this means the URL is in your public repo. That's OK — it's a public URL, not a secret.)
+
+4. Commit and push:
+
+   ```bash
+   git add public/config.js
+   git commit -m "Set Vercel API base URL"
+   git push
+   ```
+
+5. Vercel auto-deploys. Visit your Vercel URL. The frontend should load and API calls should reach the Railway backend.
+
+6. **If login still fails**, the most common causes are:
+   - `public/config.js` was not committed, or has the wrong URL
+   - Railway's `CORS_ORIGIN` does not match your Vercel URL (it must be exact, including `https://`)
+   - The Supabase DB doesn't have the admin user (re-run `seedAdmin.js` with the right `DATABASE_URL`)
 
 ---
 
@@ -115,18 +141,18 @@ Database: your local Postgres (or point `DATABASE_URL` at Supabase)
 
 ```
 ┌─────────────┐      ┌──────────────┐      ┌──────────────┐
-│   Vercel    │ ───▶ │   Render     │ ───▶ │  Supabase    │
+│   Vercel    │ ───▶ │   Railway    │ ───▶ │  Supabase    │
 │  (static)   │      │  (Express)   │      │ (Postgres)   │
 │  /pages/*   │      │  /api/v1/*   │      │  port 6543   │
 └─────────────┘      └──────────────┘      └──────────────┘
        │                                          ▲
        └────────────  uploads ────────────────────┘
-                (Render persistent disk)
+              (Railway persistent volume, paid plan)
 ```
 
 - Vercel CDN serves HTML/CSS/JS globally
-- Render runs the Express API, talks to Supabase Postgres
-- Render's persistent disk holds uploaded images
+- Railway runs the Express API, talks to Supabase Postgres
+- Railway's persistent volume holds uploaded images
 - GitHub is the source of truth; pushes trigger auto-deploys
 
 ---
