@@ -22,34 +22,34 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
    postgresql://postgres.PROJECTREF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true
    ```
 
-5. Run all the project's SQL migrations against this database. From your local machine:
+5. **Bootstrap the database** — runs all 16 migrations + both seeds in one command. From your local machine:
 
    ```bash
-   # In Supabase SQL Editor, paste and run each file in order:
-   # server/migrations/001_initial_schema.sql
-   # server/migrations/002_add_theme_to_profiles.sql
-   # ... up to ...
-   # server/migrations/016_authorization_code_usage_nullable.sql
+   export DATABASE_URL='<paste the Supabase transaction-pooler URL here>'
+   npm run bootstrap
    ```
 
-   Or, with `psql` pointing at the Supabase URL:
+   This runs, in order:
+   - `npm run migrate`  — creates the `schema_migrations` table, then applies every `server/migrations/*.sql` that hasn't been applied
+   - `npm run seed`     — inserts the 15 categories and 10 capabilities (idempotent)
+   - `npm run seed:admin` — creates the admin user `nolidacreations@gmail.com` (password `nolidaiscomingsoon100.`) and grants all roles/permissions
+
+   If `npm run bootstrap` errors with `ENOTFOUND` or connection refused, the URL is wrong (pooler not direct, wrong region, or wrong password).
+
+   If you don't have `pg` set up but the URL works, you can also run each step manually:
 
    ```bash
-   for f in server/migrations/*.sql; do
-     psql "$DATABASE_URL" -f "$f"
-   done
+   npm run migrate
+   npm run seed
+   npm run seed:admin
    ```
 
-6. Run the seed scripts:
+6. Verify in the Supabase dashboard:
+   - **Table Editor → users** should have one row: `nolidacreations@gmail.com`
+   - **Table Editor → categories** should have 15 rows
+   - **Table Editor → schema_migrations** should have 16 rows
 
-   ```bash
-   DATABASE_URL=<supabase-url> node server/seeds/seed.js
-   DATABASE_URL=<supabase-url> node server/seeds/seedAdmin.js
-   ```
-
-   The admin seed prints the email and password. The default credentials are:
-   - Email: `nolidacreations@gmail.com`
-   - Password: `nolidaiscomingsoon100.`
+7. Re-running `npm run seed:admin` later is safe and idempotent: it re-hashes the password and sets status to `active`. Use this to reset the admin password if you forget it.
 
 ---
 
@@ -62,7 +62,7 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
 
    | Key | Value |
    |---|---|
-   | `DATABASE_URL` | the Supabase Transaction pooler URL from step 1 |
+   | `DATABASE_URL` | the Supabase Transaction pooler URL from step 1 (REQUIRED — without this, the backend will crash-loop on startup) |
    | `JWT_ACCESS_SECRET` | a random 32+ char string (e.g. `openssl rand -hex 32`) |
    | `JWT_REFRESH_SECRET` | another random 32+ char string |
    | `CORS_ORIGIN` | your Vercel URL (placeholder OK for now, update in step 3) |
@@ -70,6 +70,8 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
    | `APP_URL` | your Vercel URL |
    | `FLUTTERWAVE_SECRET_KEY` | only if you use payments |
    | `GOOGLE_MAPS_API_KEY` | only if you use maps |
+
+   **If `DATABASE_URL` is not set**, the service will keep restarting in a loop and the healthcheck will fail. The deploy logs will show `Database connection failed`.
 
 5. **Persistent disk (paid plans only):**
    - Service → **Settings → Volumes → Add Volume**
@@ -118,10 +120,11 @@ The Express backend is **not** converted to serverless. It runs as a long-lived 
 
 5. Vercel auto-deploys. Visit your Vercel URL. The frontend should load and API calls should reach the Railway backend.
 
-6. **If login still fails**, the most common causes are:
-   - `public/config.js` was not committed, or has the wrong URL
-   - Railway's `CORS_ORIGIN` does not match your Vercel URL (it must be exact, including `https://`)
-   - The Supabase DB doesn't have the admin user (re-run `seedAdmin.js` with the right `DATABASE_URL`)
+6. **If login still fails**, the most common causes in order of frequency:
+   1. **`DATABASE_URL` is not set in Railway**, or the Supabase project hasn't been bootstrapped (`npm run bootstrap` not run). Login returns "Invalid email or password" because no user exists. Check Railway's deploy logs for "Database connection failed".
+   2. **`public/config.js` was not committed**, or has the wrong URL. Every API call returns 404 from Vercel. Open DevTools → Network and look at where the login POST actually went.
+   3. **CORS** — `CORS_ORIGIN` on Railway does not exactly match the Vercel URL (must include `https://`, no trailing slash).
+   4. The Supabase DB has the user but the password is different. Re-run `DATABASE_URL=... npm run seed:admin` to reset.
 
 ---
 
