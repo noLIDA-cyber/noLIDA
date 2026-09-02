@@ -23,7 +23,7 @@ router.get('/',
 
 // Get single listing by ID
 router.get('/:id',
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const isOwner = req.query.owner === 'true';
     const listing = await getListing(req.params.id, false, isOwner);
@@ -44,7 +44,7 @@ router.post('/',
 // Update listing (owner only or admin override)
 router.patch('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOwnership('listing'),
   validateRequest(listingSchemas.update),
   asyncHandler(async (req, res) => {
@@ -56,7 +56,7 @@ router.patch('/:id',
 // Delete listing (owner only)
 router.delete('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOwnership('listing'),
   asyncHandler(async (req, res) => {
     const result = await deleteListing(req.params.id, req.user.id);

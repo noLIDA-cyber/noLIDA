@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const Joi = require('joi');
 const { authenticate } = require('../middleware/auth');
 const { requireOwnership, requireTransactionAccess } = require('../middleware/ownership');
 const { requirePermission } = require('../middleware/authorization');
@@ -47,7 +48,7 @@ router.get('/me',
 // Get single dispute
 router.get('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOwnership('dispute'),
   asyncHandler(async (req, res) => {
     const dispute = await getDispute(req.params.id);
@@ -58,7 +59,7 @@ router.get('/:id',
 // Update dispute status (admin/moderator or owner with permission)
 router.patch('/:id/status',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requirePermission(['disputes.manage', 'disputes.view'], { mode: 'any' }),
   validateRequest(disputeSchemas.updateStatus),
   asyncHandler(async (req, res) => {

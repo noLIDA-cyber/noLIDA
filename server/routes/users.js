@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const Joi = require('joi');
 const { authenticate } = require('../middleware/auth');
-const { getUserProfile, updateUserProfile } = require('../services/userService');
+const { getUserProfile, updateUserProfile, listUsers, isAdmin } = require('../services/userService');
 const { hasApprovedBusiness, getApprovedBusiness } = require('../services/businessSubmissionService');
 const { asyncHandler } = require('../middleware/error');
 const { sendSuccess } = require('../utils/response');
@@ -25,6 +25,15 @@ router.get('/business-status',
     const approved = await hasApprovedBusiness(req.user.id);
     const business = await (require('../services/businessSubmissionService').getLatestBusinessSubmission(req.user.id));
     sendSuccess(res, { approved, business }, 200, 'Business status retrieved successfully');
+  })
+);
+
+// Get admin status
+router.get('/admin-status',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const admin = await isAdmin(req.user.id);
+    sendSuccess(res, { isAdmin: admin }, 200, 'Admin status retrieved successfully');
   })
 );
 

@@ -72,8 +72,19 @@ const listUsers = async (page = 1, limit = 20, filters = {}) => {
   };
 };
 
+const isAdmin = async (userId) => {
+  const result = await query(
+    `SELECT COUNT(*) as count FROM organization_members om
+     JOIN roles r ON r.id = om.role_id
+     WHERE om.user_id = $1 AND om.status = 'active' AND r.is_system = TRUE`,
+    [userId]
+  );
+  return parseInt(result.rows[0].count) > 0;
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
   listUsers,
+  isAdmin,
 };

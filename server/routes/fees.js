@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const Joi = require('joi');
 const { authenticate } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/authorization');
 const { createFee, getFees, getFee, updateFee, deleteFee } = require('../services/feeService');
@@ -29,7 +30,7 @@ router.get('/',
 // Get single fee
 router.get('/:id',
   requirePermission(['settings.manage', 'reports.view'], { mode: 'any' }),
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const fee = await getFee(req.params.id);
     sendSuccess(res, fee, 200, 'Fee retrieved successfully');
@@ -49,7 +50,7 @@ router.post('/',
 // Update fee (requires settings.manage permission)
 router.patch('/:id',
   requirePermission('settings.manage'),
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   validateRequest(feeSchemas.update),
   asyncHandler(async (req, res) => {
     const fee = await updateFee(req.params.id, req.body);
@@ -60,7 +61,7 @@ router.patch('/:id',
 // Delete fee (requires settings.manage permission)
 router.delete('/:id',
   requirePermission('settings.manage'),
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const result = await deleteFee(req.params.id);
     sendSuccess(res, result, 200, 'Fee deleted successfully');

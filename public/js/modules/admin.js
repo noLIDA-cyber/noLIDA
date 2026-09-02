@@ -23,9 +23,31 @@ const showToast = (message, type = 'info', duration = 3000) => {
 
 const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-export const initAdminPage = () => {
+export const initAdminPage = async () => {
   const container = document.getElementById('admin-content');
   if (!container) return;
+
+  if (!isAuthenticated()) {
+    window.location.href = '/auth';
+    return;
+  }
+
+  try {
+    const status = await apiGet('/users/admin-status');
+    if (!status.data?.isAdmin) {
+      container.innerHTML = `
+        <div class="card" style="max-width: 480px; margin: 4rem auto; padding: 2rem; text-align: center;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-danger); margin-bottom: 1rem;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <h1 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.5rem;">Access Denied</h1>
+          <p style="color: var(--theme-text-secondary); margin-bottom: 1.5rem;">You do not have permission to access the admin dashboard.</p>
+          <a href="/" class="btn btn--primary" style="text-decoration: none;">Return Home</a>
+        </div>`;
+      return;
+    }
+  } catch (err) {
+    container.innerHTML = `<div class="alert alert--danger">${err.message || 'Unable to verify admin access.'}</div>`;
+    return;
+  }
 
   let currentTab = 'users';
 

@@ -163,6 +163,7 @@ const profileAvatar = document.getElementById('profile-avatar');
 const notificationBtn = document.getElementById('notification-btn');
 const notificationBadge = document.getElementById('notification-badge');
 const providerDashboardLink = document.getElementById('drawer-provider-dashboard');
+const adminDashboardLink = document.getElementById('drawer-admin-dashboard');
 
 const openDrawer = () => {
   if (!drawer || !drawerBackdrop) return;
@@ -271,6 +272,23 @@ const updateProviderLinkVisibility = async () => {
   }
 };
 
+const updateAdminLinkVisibility = async () => {
+  if (!adminDashboardLink) return;
+  try {
+    const response = await fetch('/api/v1/users/admin-status', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      adminDashboardLink.style.display = data.data?.isAdmin ? 'flex' : 'none';
+    } else {
+      adminDashboardLink.style.display = 'none';
+    }
+  } catch (e) {
+    adminDashboardLink.style.display = 'none';
+  }
+};
+
 const updateDrawerAvatar = async () => {
   if (!drawerAvatarImg || !drawerAvatarIcon) return;
   try {
@@ -353,3 +371,4 @@ const updateNotificationBadge = async () => {
 updateDrawerState();
 updateProfileAvatar();
 updateNotificationBadge();
+updateAdminLinkVisibility();

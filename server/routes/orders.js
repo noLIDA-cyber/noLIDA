@@ -29,7 +29,7 @@ router.post('/',
 // Get single order by ID (customer or provider only, or admin)
 router.get('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const order = await getOrder(req.params.id, req.user.id);
     sendSuccess(res, order);
@@ -65,7 +65,7 @@ const updateStatusSchema = Joi.object({
 
 router.patch('/:id/status',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOwnershipOrPermission('order', 'orders.manage'),
   validateRequest(updateStatusSchema),
   asyncHandler(async (req, res) => {
@@ -77,7 +77,7 @@ router.patch('/:id/status',
 // Get order receipt (customer/provider only, or admin)
 router.get('/:id/receipt',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const { query } = require('../config/database');
     

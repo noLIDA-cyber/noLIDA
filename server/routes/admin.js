@@ -106,7 +106,7 @@ router.get('/risk',
 // Resolve risk event (admin only - requires risk.manage permission)
 router.patch('/risk/:id/resolve',
   requirePermission('risk.manage'),
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   validateRequest(adminSchemas.updateRiskEvent),
   asyncHandler(async (req, res) => {
     const { query } = require('../config/database');

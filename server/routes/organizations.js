@@ -31,7 +31,7 @@ router.get('/',
 // Get single organization
 router.get('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const organization = await getOrganization(req.params.id, req.user.id);
     sendSuccess(res, organization);
@@ -51,7 +51,7 @@ router.post('/',
 // Update organization (owner only)
 router.patch('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOrganizationRole('owner', { paramName: 'id' }),
   validateRequest(organizationSchemas.update),
   asyncHandler(async (req, res) => {
@@ -63,7 +63,7 @@ router.patch('/:id',
 // Delete organization (owner only)
 router.delete('/:id',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOrganizationRole('owner', { paramName: 'id' }),
   asyncHandler(async (req, res) => {
     const result = await deleteOrganization(req.params.id, req.user.id);
@@ -74,7 +74,7 @@ router.delete('/:id',
 // Get organization members
 router.get('/:id/members',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const members = await getOrganizationMembers(req.params.id, req.user.id);
     sendSuccess(res, members);
@@ -84,7 +84,7 @@ router.get('/:id/members',
 // Add organization member (owner only)
 router.post('/:id/members',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   requireOrganizationRole('owner', { paramName: 'id' }),
   validateRequest(organizationSchemas.addMember),
   asyncHandler(async (req, res) => {
@@ -96,7 +96,7 @@ router.post('/:id/members',
 // Remove organization member (owner only)
 router.delete('/:id/members/:memberId',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id, memberId: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id, memberId: schemas.id })),
   requireOrganizationRole('owner', { paramName: 'id' }),
   asyncHandler(async (req, res) => {
     const result = await removeOrganizationMember(req.params.id, req.user.id, req.params.memberId);
@@ -107,7 +107,7 @@ router.delete('/:id/members/:memberId',
 // Update member role (owner only)
 router.patch('/:id/members/:memberId/role',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id, memberId: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id, memberId: schemas.id })),
   requireOrganizationRole('owner', { paramName: 'id' }),
   validateRequest(organizationSchemas.updateMemberRole),
   asyncHandler(async (req, res) => {
@@ -119,7 +119,7 @@ router.patch('/:id/members/:memberId/role',
 // Get organization stats
 router.get('/:id/stats',
   authenticate,
-  validateParams(Joi.object({ id: schemas.id }),
+  validateParams(Joi.object({ id: schemas.id })),
   asyncHandler(async (req, res) => {
     const stats = await getOrganizationStats(req.params.id, req.user.id);
     sendSuccess(res, stats);
