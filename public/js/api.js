@@ -50,21 +50,11 @@ const api = async (endpoint, options = {}) => {
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-        const data = await retryResponse.json();
-        if (!retryResponse.ok) {
-          throw new Error(data.message || `HTTP ${retryResponse.status}`);
-        }
-        return data;
+        return await parseResponse(retryResponse, url);
       }
     }
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP ${response.status}`);
-    }
-
-    return data;
+    return await parseResponse(response, url);
   } catch (error) {
     console.error('API Error:', error);
     if (error.name === 'AbortError') {
@@ -72,6 +62,22 @@ const api = async (endpoint, options = {}) => {
     }
     throw error;
   }
+};
+
+const parseResponse = async (response, url) => {
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    if (response.status === 404) {
+      throw new Error(`API endpoint not found: ${url}. Check that public/config.js has the right NOLIDA_API_BASE value.`);
+    }
+    const text = await response.text().catch(() => '');
+    throw new Error(`Expected JSON from API, got ${contentType || 'non-JSON'} (status ${response.status}). Body starts with: ${text.slice(0, 60)}`);
+  }
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || `HTTP ${response.status}`);
+  }
+  return data;
 };
 
 const tryRefreshToken = async () => {
