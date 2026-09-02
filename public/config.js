@@ -12,5 +12,5 @@
 // IMPORTANT: this file is committed to the repo and deployed to
 // Vercel. It contains a public URL, not a secret, so that's fine.
 
-window.NOLIDA_API_BASE = 'nolida-production.up.railway.app';
-window.NOLIDA_FRONTEND_URL = 'http://no-lida-blush.vercel.app/';
+window.NOLIDA_API_BASE = 'https://nolida-production.up.railway.app';
+window.NOLIDA_FRONTEND_URL = 'https://no-lida-blush.vercel.app';
