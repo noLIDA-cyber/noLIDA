@@ -1,4 +1,6 @@
-const API_BASE = `/api/${window.NOLIDA_API_VERSION || 'v1'}`;
+const API_BASE = (window.NOLIDA_API_BASE
+  ? `${window.NOLIDA_API_BASE.replace(/\/$/, '')}/api/${window.NOLIDA_API_VERSION || 'v1'}`
+  : `/api/${window.NOLIDA_API_VERSION || 'v1'}`);
 const FRONTEND_URL = window.NOLIDA_FRONTEND_URL || 'http://localhost:3001';
 
 const getAuthHeader = () => {
@@ -77,7 +79,7 @@ const tryRefreshToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) return false;
 
-    const response = await fetch('/api/v1/auth/refresh', {
+    const response = await fetch(`${API_BASE}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),

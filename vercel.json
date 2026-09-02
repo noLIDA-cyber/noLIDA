@@ -1,19 +1,61 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server/app.js",
-      "use": "@vercel/node"
-    }
+  "name": "nolida-web",
+  "outputDirectory": "public",
+  "buildCommand": null,
+  "installCommand": null,
+  "framework": null,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/", "destination": "/pages/index.html" },
+    { "source": "/auth", "destination": "/pages/auth.html" },
+    { "source": "/register", "destination": "/pages/register.html" },
+    { "source": "/forgot-password", "destination": "/pages/forgot-password.html" },
+    { "source": "/dashboard", "destination": "/pages/dashboard.html" },
+    { "source": "/search", "destination": "/pages/search.html" },
+    { "source": "/categories", "destination": "/pages/categories.html" },
+    { "source": "/listing/:id", "destination": "/pages/listing.html" },
+    { "source": "/list-business", "destination": "/pages/list-business.html" },
+    { "source": "/admin", "destination": "/pages/admin.html" },
+    { "source": "/provider", "destination": "/pages/provider.html" },
+    { "source": "/orders", "destination": "/pages/orders.html" },
+    { "source": "/customers", "destination": "/pages/customers.html" },
+    { "source": "/customer/:id", "destination": "/pages/customer.html" },
+    { "source": "/analytics", "destination": "/pages/analytics.html" },
+    { "source": "/bookings", "destination": "/pages/bookings.html" },
+    { "source": "/booking/:id", "destination": "/pages/booking.html" },
+    { "source": "/book/new", "destination": "/pages/book-new.html" },
+    { "source": "/cart", "destination": "/pages/cart.html" },
+    { "source": "/checkout", "destination": "/pages/checkout.html" },
+    { "source": "/reviews", "destination": "/pages/reviews.html" },
+    { "source": "/disputes", "destination": "/pages/disputes.html" },
+    { "source": "/verification", "destination": "/pages/verification.html" },
+    { "source": "/settings", "destination": "/pages/settings.html" },
+    { "source": "/settings/security", "destination": "/pages/settings-security.html" },
+    { "source": "/settings/payments", "destination": "/pages/settings-payments.html" },
+    { "source": "/settings/privacy", "destination": "/pages/settings-privacy.html" },
+    { "source": "/settings/account", "destination": "/pages/settings-account.html" },
+    { "source": "/account", "destination": "/pages/account.html" },
+    { "source": "/notifications", "destination": "/pages/notifications.html" }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "dest": "server/app.js"
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     },
     {
-      "src": "/(.*)",
-      "dest": "server/app.js"
+      "source": "/css/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     }
   ]
 }
