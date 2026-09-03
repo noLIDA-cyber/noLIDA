@@ -243,7 +243,6 @@ const updateDrawerState = () => {
       drawerUserEmail.textContent = user.email || '';
     }
     updateDrawerAvatar();
-    updateProviderLinkVisibility();
   } else {
     drawerGuest.style.display = 'block';
     drawerUser.style.display = 'none';
