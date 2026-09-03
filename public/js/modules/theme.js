@@ -5,6 +5,10 @@ const ThemeManager = (() => {
   const ACCENT_ATTR = 'data-accent';
   const CLASS_LOADING = 'theme-loading';
 
+  const API_BASE = (window.NOLIDA_API_BASE
+    ? `${window.NOLIDA_API_BASE.replace(/\/$/, '')}/api/${window.NOLIDA_API_VERSION || 'v1'}`
+    : `/api/${window.NOLIDA_API_VERSION || 'v1'}`);
+
   const THEMES = {
     LIGHT: 'light',
     DARK: 'dark',
@@ -91,7 +95,7 @@ const ThemeManager = (() => {
         body.accent = accent;
       }
 
-      await fetch('/api/v1/users/theme', {
+      await fetch(`${API_BASE}/users/theme`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +113,7 @@ const ThemeManager = (() => {
       const token = localStorage.getItem('accessToken');
       if (!token) return null;
 
-      const response = await fetch('/api/v1/users/theme', {
+      const response = await fetch(`${API_BASE}/users/theme`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

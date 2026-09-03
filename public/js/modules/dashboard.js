@@ -16,7 +16,7 @@ const initDashboard = async () => {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       try {
-        await fetch('/api/v1/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        await apiPost('/auth/logout', {});
       } catch (e) {
         console.error('Logout error', e);
       }

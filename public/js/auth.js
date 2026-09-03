@@ -149,7 +149,7 @@ const initAuthPage = () => {
 
 const logout = async () => {
   try {
-    await fetch('/api/v1/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    await apiPost('/auth/logout', {});
   } catch (error) {
     console.error('Logout error:', error);
   } finally {

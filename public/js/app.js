@@ -1,7 +1,7 @@
 window.NOLIDA_API_VERSION = 'v1';
 window.NOLIDA_FRONTEND_URL = 'http://localhost:3001';
 
-import { isAuthenticated, apiGet, getCurrentUser } from './api.js';
+import { isAuthenticated, apiGet, apiPost, getCurrentUser } from './api.js';
 import './modules/theme.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -261,23 +261,6 @@ const updateDrawerState = () => {
   }
 };
 
-const updateProviderLinkVisibility = async () => {
-  if (!providerDashboardLink) return;
-  try {
-    const response = await fetch('/api/v1/users/business-status', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      providerDashboardLink.style.display = data.data?.approved ? 'flex' : 'none';
-    } else {
-      providerDashboardLink.style.display = 'none';
-    }
-  } catch (e) {
-    providerDashboardLink.style.display = 'none';
-  }
-};
-
 const updateAdminLinkVisibility = async () => {
   if (!adminDashboardLink) return;
   try {
@@ -334,21 +317,15 @@ const updateDrawerAvatar = async () => {
       return;
     }
 
-    const response = await fetch('/api/v1/users/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const avatarUrl = data.data?.avatar_url;
-      if (avatarUrl) {
-        drawerAvatarImg.src = avatarUrl;
-        drawerAvatarImg.style.display = 'block';
-        drawerAvatarIcon.style.display = 'none';
-      } else {
-        drawerAvatarIcon.style.display = 'block';
-        drawerAvatarImg.style.display = 'none';
-      }
+    const data = await apiGet('/users/me');
+    const avatarUrl = data.data?.avatar_url;
+    if (avatarUrl) {
+      drawerAvatarImg.src = avatarUrl;
+      drawerAvatarImg.style.display = 'block';
+      drawerAvatarIcon.style.display = 'none';
+    } else {
+      drawerAvatarIcon.style.display = 'block';
+      drawerAvatarImg.style.display = 'none';
     }
   } catch (e) {
     drawerAvatarIcon.style.display = 'block';
