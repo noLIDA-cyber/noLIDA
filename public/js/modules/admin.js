@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiDelete, isAuthenticated } from '/js/api.js';
+import { apiGet, apiPost, apiPatch, apiDelete, isAuthenticated } from '/js/api.js';
 
 const showToast = (message, type = 'info', duration = 3000) => {
   let container = document.getElementById('toast-container');
