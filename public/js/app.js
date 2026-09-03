@@ -287,6 +287,26 @@ const updateAdminLinkVisibility = async () => {
   }
 };
 
+const updateMyBusinessLinkVisibility = async () => {
+  if (!providerDashboardLink) return;
+  if (!isAuthenticated()) {
+    providerDashboardLink.style.display = 'none';
+    return;
+  }
+  try {
+    const data = await apiGet('/users/business-status');
+    const approved = Boolean(data.data?.approved);
+    const business = data.data?.business;
+    // Show link if user has an approved business, or if their
+    // latest submission is in any non-rejected state (so they
+    // can return to "My Business" to check status / edit draft).
+    const hasAnySubmission = business && business.status !== 'rejected';
+    providerDashboardLink.style.display = (approved || hasAnySubmission) ? 'flex' : 'none';
+  } catch (e) {
+    providerDashboardLink.style.display = 'none';
+  }
+};
+
 const updateDrawerAvatar = async () => {
   if (!drawerAvatarImg || !drawerAvatarIcon) return;
   try {
@@ -370,3 +390,4 @@ updateDrawerState();
 updateProfileAvatar();
 updateNotificationBadge();
 updateAdminLinkVisibility();
+updateMyBusinessLinkVisibility();
