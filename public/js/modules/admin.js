@@ -343,8 +343,8 @@ export const initAdminPage = async () => {
               expiresInDays: parseInt(formData.get('expiresInDays')) || 30,
               notes: formData.get('notes') || null,
             });
-            alert(`Authorization code generated:\n\n${data.data.code}\n\nShare this code with the user. It will not be shown again.`);
             modal.remove();
+            showGeneratedCodeModal(data.data.code);
             loadTab('auth-codes');
           } catch (err) {
             showToast(err.message, 'error');
@@ -355,6 +355,56 @@ export const initAdminPage = async () => {
         });
       });
     }
+  };
+
+  const showGeneratedCodeModal = (code) => {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+    modal.innerHTML = `
+      <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Authorization Code Generated</h3>
+          <button class="btn btn--ghost btn--sm" id="code-modal-close" style="color: var(--theme-text-secondary);">✕</button>
+        </div>
+        <p style="color: var(--theme-text-secondary); font-size: var(--text-sm); margin: 0 0 0.5rem;">Share this code with the user via WhatsApp (07051679159). It will not be shown again.</p>
+        <div style="background: var(--theme-bg-secondary); border: 1px solid var(--theme-border); border-radius: 6px; padding: 1rem; margin: 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          <code id="generated-code-text" style="flex: 1; font-family: ui-monospace, SFMono-Regular, monospace; font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); letter-spacing: 0.05em; word-break: break-all;">${code}</code>
+          <button class="btn btn--primary btn--sm" id="copy-code-btn" style="white-space: nowrap;">Copy</button>
+        </div>
+        <div style="background: var(--color-warning); color: var(--color-white); padding: 0.75rem; border-radius: 6px; font-size: var(--text-sm); margin: 0 0 1rem;">
+          <strong>Important:</strong> Save this code now. For security reasons, only the hash is stored in the database.
+        </div>
+        <button class="btn btn--primary btn--block" id="code-modal-done">Done</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const close = () => modal.remove();
+    document.getElementById('code-modal-close').addEventListener('click', close);
+    document.getElementById('code-modal-done').addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+    document.getElementById('copy-code-btn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(code);
+        const btn = document.getElementById('copy-code-btn');
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+      } catch (e) {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch {}
+        ta.remove();
+        showToast('Code copied', 'success');
+      }
+    });
   };
 
   const renderBusinessApprovals = (submissions) => {
