@@ -139,7 +139,7 @@ const moderateReview = async (adminId, reviewId, action, notes = null) => {
   await query(
     `INSERT INTO audit_logs (actor_id, action, target_type, target_id, changes)
      VALUES ($1, $2, 'review', $3, $4)`,
-    [adminId, `review_${action}`, reviewId, JSON.stringify({ new_status: newStatus, notes })]
+    [adminId, `review_${action}`, reviewId, { new_status: newStatus, notes }]
   );
 
   return await getReview(reviewId, true);
