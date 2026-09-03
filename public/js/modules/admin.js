@@ -423,30 +423,4 @@ export const initAdminPage = async () => {
       });
     });
   };
-
-  const tabs = ['users', 'risk', 'audit', 'fees', 'auth-codes', 'business-approvals'];
-  container.innerHTML = `
-    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--theme-border); padding-bottom: 0.5rem;">
-      ${tabs.map(t => `<button class="btn btn--${currentTab === t ? 'primary' : 'ghost'} btn--sm tab-btn" data-tab="${t}">${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}
-    </div>
-    <div id="tab-content"></div>
-  `;
-
-  container.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => loadTab(btn.dataset.tab));
-  });
-
-  const tabContent = document.getElementById('tab-content');
-  if (tabContent) {
-    const observer = new MutationObserver(() => {
-      if (tabContent.innerHTML) {
-        container.innerHTML += `<div id="tab-content" style="display: none;"></div>`;
-        document.getElementById('tab-content').innerHTML = tabContent.innerHTML;
-        document.getElementById('tab-content').style.display = 'block';
-      }
-    });
-    observer.observe(tabContent, { childList: true });
-  }
-
-  loadTab(currentTab);
 };
