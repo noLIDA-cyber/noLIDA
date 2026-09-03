@@ -82,15 +82,20 @@ const injectVerificationBanner = async () => {
   if (document.body.dataset.page === 'verification') return;
   if (!isAuthenticated()) return;
 
+  let isAdminUser = false;
+  try {
+    const status = await apiGet('/users/admin-status');
+    isAdminUser = Boolean(status.data?.isAdmin);
+  } catch (e) {
+    // If the admin-status call fails, fall through to the verification
+    // check below so non-admins still see the banner.
+  }
+  if (isAdminUser) return;
+
   let hasApproved = false;
   try {
-    const response = await fetch('/api/v1/verification/me/status', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      hasApproved = Object.values(data.data || {}).some(s => s === 'approved');
-    }
+    const data = await apiGet('/verification/me/status', { timeout: 5000 });
+    hasApproved = Object.values(data.data || {}).some(s => s === 'approved');
   } catch (e) {
     return;
   }
@@ -275,15 +280,8 @@ const updateProviderLinkVisibility = async () => {
 const updateAdminLinkVisibility = async () => {
   if (!adminDashboardLink) return;
   try {
-    const response = await fetch('/api/v1/users/admin-status', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      adminDashboardLink.style.display = data.data?.isAdmin ? 'flex' : 'none';
-    } else {
-      adminDashboardLink.style.display = 'none';
-    }
+    const data = await apiGet('/users/admin-status');
+    adminDashboardLink.style.display = data.data?.isAdmin ? 'flex' : 'none';
   } catch (e) {
     adminDashboardLink.style.display = 'none';
   }
