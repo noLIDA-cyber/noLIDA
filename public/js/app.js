@@ -168,6 +168,7 @@ const profileAvatar = document.getElementById('profile-avatar');
 const notificationBtn = document.getElementById('notification-btn');
 const notificationBadge = document.getElementById('notification-badge');
 const providerDashboardLink = document.getElementById('drawer-provider-dashboard');
+const myBusinessLabel = document.getElementById('drawer-my-business-label');
 const adminDashboardLink = document.getElementById('drawer-admin-dashboard');
 
 const openDrawer = () => {
@@ -297,11 +298,27 @@ const updateMyBusinessLinkVisibility = async () => {
     const data = await apiGet('/users/business-status');
     const approved = Boolean(data.data?.approved);
     const business = data.data?.business;
-    // Show link if user has an approved business, or if their
-    // latest submission is in any non-rejected state (so they
-    // can return to "My Business" to check status / edit draft).
-    const hasAnySubmission = business && business.status !== 'rejected';
-    providerDashboardLink.style.display = (approved || hasAnySubmission) ? 'flex' : 'none';
+    const status = business && business.status;
+
+    let label, href;
+    if (approved) {
+      label = 'My Business';
+      href = '/provider';
+    } else if (status === 'rejected') {
+      label = 'Resubmit Business';
+      href = '/list-business';
+    } else if (status) {
+      // pending_review, changes_requested, draft
+      label = 'My Business';
+      href = '/provider';
+    } else {
+      label = 'List Your Business';
+      href = '/list-business';
+    }
+
+    if (myBusinessLabel) myBusinessLabel.textContent = label;
+    providerDashboardLink.setAttribute('href', href);
+    providerDashboardLink.style.display = 'flex';
   } catch (e) {
     providerDashboardLink.style.display = 'none';
   }
