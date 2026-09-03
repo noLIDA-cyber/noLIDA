@@ -88,6 +88,9 @@ export const initAdminPage = async () => {
       } else if (tab === 'business-approvals') {
         const data = await apiGet('/business-submissions');
         renderBusinessApprovals(data.data || []);
+      } else if (tab === 'reviews') {
+        const data = await apiGet('/admin/reviews/pending?limit=50');
+        renderReviews(data.data || [], data.pagination);
       }
     } catch (err) {
       container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
@@ -469,6 +472,88 @@ export const initAdminPage = async () => {
           loadTab('business-approvals');
         } catch (err) {
           showToast(err.message, 'error');
+        }
+      });
+    });
+  };
+
+  const renderStars = (rating) => {
+    const r = Math.max(0, Math.min(5, parseInt(rating) || 0));
+    return '★'.repeat(r) + '☆'.repeat(5 - r);
+  };
+
+  const renderReviews = (reviews, pagination) => {
+    container.innerHTML = `
+      <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 0.25rem;">Pending Reviews</h1>
+      <p style="color: var(--theme-text-secondary); font-size: var(--text-sm); margin: 0 0 1.5rem;">${pagination?.total || 0} review${(pagination?.total || 0) === 1 ? '' : 's'} awaiting moderation.</p>
+      ${reviews.length === 0 ? `
+        <div class="empty-state">
+          <div class="empty-state__icon">✅</div>
+          <p class="empty-state__title">Inbox zero</p>
+          <p class="empty-state__description">No reviews are waiting for moderation right now.</p>
+        </div>
+      ` : `
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${reviews.map(r => `
+            <div class="card" style="padding: 1.5rem; border: 1px solid var(--theme-border);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <div style="font-size: var(--text-lg); color: var(--color-warning); letter-spacing: 0.1em; margin-bottom: 0.25rem;">${renderStars(r.rating)}</div>
+                  ${r.title ? `<h3 style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0 0 0.25rem;">${r.title}</h3>` : ''}
+                </div>
+                <span class="badge badge--warning">Pending</span>
+              </div>
+              <p style="color: var(--theme-text-primary); font-size: var(--text-sm); line-height: 1.5; margin: 0 0 0.75rem; white-space: pre-wrap;">${r.content || ''}</p>
+              <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 0.75rem 0; border-top: 1px solid var(--theme-border); border-bottom: 1px solid var(--theme-border); margin-bottom: 0.75rem;">
+                <div>
+                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary); margin: 0 0 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Customer</p>
+                  <p style="font-size: var(--text-sm); color: var(--theme-text-primary); margin: 0;">${r.customer_name || r.customer_email || '#' + r.customer_id}</p>
+                </div>
+                <div>
+                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary); margin: 0 0 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Provider</p>
+                  <p style="font-size: var(--text-sm); color: var(--theme-text-primary); margin: 0;">${r.provider_name || r.provider_email || '#' + r.provider_id}</p>
+                </div>
+                <div>
+                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary); margin: 0 0 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;">Submitted</p>
+                  <p style="font-size: var(--text-sm); color: var(--theme-text-primary); margin: 0;">${formatDate(r.created_at)}</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn--primary btn--sm approve-review" data-id="${r.id}">Approve & Publish</button>
+                <button class="btn btn--ghost btn--sm reject-review" data-id="${r.id}" style="color: var(--color-danger);">Reject (Hide)</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    `;
+
+    container.querySelectorAll('.approve-review').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          await apiPatch(`/admin/reviews/${btn.dataset.id}/moderate`, { action: 'approve' });
+          showToast('Review published', 'success');
+          loadTab('reviews');
+        } catch (err) {
+          showToast(err.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    container.querySelectorAll('.reject-review').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const reason = prompt('Reason for rejection (will be stored for audit):');
+        if (!reason) return;
+        btn.disabled = true;
+        try {
+          await apiPatch(`/admin/reviews/${btn.dataset.id}/moderate`, { action: 'reject', notes: reason });
+          showToast('Review hidden', 'success');
+          loadTab('reviews');
+        } catch (err) {
+          showToast(err.message, 'error');
+          btn.disabled = false;
         }
       });
     });

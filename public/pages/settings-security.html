@@ -1,15 +1,15 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA â€” Security Settings</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA — Security Settings</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="settings">
@@ -96,7 +96,7 @@
   </main>
 
     <script src="/config.js"></script>
-<script type="module" src="/js/app.js?v=17"></script>
+<script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { apiPost, apiGet, apiDelete, isAuthenticated } from '/js/api.js';
     import { showToast } from '/js/app.js';
@@ -249,7 +249,7 @@
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div>
                   <p style="font-weight: var(--weight-medium); color: var(--theme-text-primary); font-size: var(--text-sm);">${s.device_info?.browser || 'Browser'} on ${s.device_info?.os || 'Unknown OS'}</p>
-                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary);">${s.ip_address || 'Unknown IP'} Â· ${new Date(s.created_at).toLocaleDateString()}</p>
+                  <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary);">${s.ip_address || 'Unknown IP'} · ${new Date(s.created_at).toLocaleDateString()}</p>
                 </div>
                 <button class="btn btn--ghost btn--sm revoke-session" data-id="${s.id}" style="color: var(--color-danger);">Revoke</button>
               </div>

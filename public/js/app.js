@@ -19,57 +19,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   const page = document.body.dataset.page;
 
   if (page === 'auth') {
-    import('./modules/auth.js?v=17').then(m => m.initAuthPage()).catch(err => console.error('Auth module failed:', err));
+    import('./modules/auth.js?v=18').then(m => m.initAuthPage()).catch(err => console.error('Auth module failed:', err));
   }
 
   if (page === 'dashboard') {
-    import('./modules/dashboard.js?v=17').then(m => m.initDashboard()).catch(err => console.error('Dashboard module failed:', err));
+    import('./modules/dashboard.js?v=18').then(m => m.initDashboard()).catch(err => console.error('Dashboard module failed:', err));
   }
 
   if (page === 'search') {
-    import('./modules/search.js?v=17').then(m => m.initSearch()).catch(err => console.error('Search module failed:', err));
+    import('./modules/search.js?v=18').then(m => m.initSearch()).catch(err => console.error('Search module failed:', err));
   }
 
   if (page === 'admin') {
-    import('./modules/admin.js?v=17').then(m => m.initAdminPage()).catch(err => console.error('Admin module failed:', err));
+    import('./modules/admin.js?v=18').then(m => m.initAdminPage()).catch(err => console.error('Admin module failed:', err));
   }
 
   if (page === 'settings') {
-    import('./modules/settings.js?v=17').then(m => m.initSettingsPage()).catch(err => console.error('Settings module failed:', err));
+    import('./modules/settings.js?v=18').then(m => m.initSettingsPage()).catch(err => console.error('Settings module failed:', err));
   }
 
   if (page === 'reviews') {
-    import('./modules/reviews.js?v=17').then(m => m.initReviewsPage()).catch(err => console.error('Reviews module failed:', err));
+    import('./modules/reviews.js?v=18').then(m => m.initReviewsPage()).catch(err => console.error('Reviews module failed:', err));
   }
 
   if (page === 'disputes') {
-    import('./modules/disputes.js?v=17').then(m => m.initDisputesPage()).catch(err => console.error('Disputes module failed:', err));
+    import('./modules/disputes.js?v=18').then(m => m.initDisputesPage()).catch(err => console.error('Disputes module failed:', err));
   }
 
   if (page === 'verification') {
   }
 
   if (page === 'bookings') {
-    import('./modules/bookings.js?v=17').then(m => m.initBookingsPage()).catch(err => console.error('Bookings module failed:', err));
+    import('./modules/bookings.js?v=18').then(m => m.initBookingsPage()).catch(err => console.error('Bookings module failed:', err));
   }
 
   if (page === 'booking-detail') {
-    import('./modules/bookings.js?v=17').then(m => m.initBookingDetail()).catch(err => console.error('Booking detail module failed:', err));
+    import('./modules/bookings.js?v=18').then(m => m.initBookingDetail()).catch(err => console.error('Booking detail module failed:', err));
   }
 
   if (page === 'provider') {
   }
 
   if (page === 'customers') {
-    import('./modules/customers.js?v=17').then(m => m.initCustomersPage()).catch(err => console.error('Customers module failed:', err));
+    import('./modules/customers.js?v=18').then(m => m.initCustomersPage()).catch(err => console.error('Customers module failed:', err));
   }
 
   if (page === 'customer-detail') {
-    import('./modules/customers.js?v=17').then(m => m.initCustomerDetail()).catch(err => console.error('Customer detail module failed:', err));
+    import('./modules/customers.js?v=18').then(m => m.initCustomerDetail()).catch(err => console.error('Customer detail module failed:', err));
   }
 
   if (page === 'analytics') {
-    import('./modules/analytics.js?v=17').then(m => m.initAnalyticsPage()).catch(err => console.error('Analytics module failed:', err));
+    import('./modules/analytics.js?v=18').then(m => m.initAnalyticsPage()).catch(err => console.error('Analytics module failed:', err));
   }
 });
 

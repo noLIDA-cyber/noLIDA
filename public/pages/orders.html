@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — My Orders</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA � My Orders</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="orders">
@@ -58,7 +58,7 @@
       });
     }
   </script>
-<script type="module" src="/js/app.js?v=17"></script>
+<script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { apiGet, isAuthenticated } from '/js/api.js';
 
@@ -83,7 +83,7 @@
       }, duration);
     };
 
-    const formatCurrency = (amount) => `₦${Number(amount || 0).toLocaleString()}`;
+    const formatCurrency = (amount) => `?${Number(amount || 0).toLocaleString()}`;
     const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     if (!isAuthenticated()) {
@@ -100,7 +100,7 @@
         if (orders.length === 0) {
           container.innerHTML = `
             <div class="empty-state">
-              <div class="empty-state__icon">📦</div>
+              <div class="empty-state__icon">??</div>
               <p class="empty-state__title">No orders yet</p>
               <p class="empty-state__description">Your orders will appear here after purchase.</p>
             </div>`;

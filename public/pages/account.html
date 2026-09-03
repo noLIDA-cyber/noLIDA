@@ -1,15 +1,15 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA â€” My Account</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA — My Account</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="account">
@@ -86,21 +86,21 @@
                 <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Email</div>
                 <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your login email</div>
               </div>
-              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-email">â€”</span>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-email">—</span>
             </div>
             <div class="flex items-center justify-between" style="padding: 0.75rem 0; border-bottom: 1px solid var(--theme-border);">
               <div>
                 <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Phone</div>
                 <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your phone number</div>
               </div>
-              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-phone">â€”</span>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-phone">—</span>
             </div>
             <div class="flex items-center justify-between" style="padding: 0.75rem 0;">
               <div>
                 <div style="font-weight: var(--weight-medium); color: var(--theme-text-primary);">Country</div>
                 <div style="font-size: var(--text-sm); color: var(--theme-text-tertiary);">Your country</div>
               </div>
-              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-country">â€”</span>
+              <span style="font-size: var(--text-sm); color: var(--theme-text-secondary);" id="account-country">—</span>
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@
   </main>
 
     <script src="/config.js"></script>
-<script type="module" src="/js/app.js?v=17"></script>
+<script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { apiGet, apiPatch, apiDelete, isAuthenticated } from '/js/api.js';
     import { showToast } from '/js/app.js';
@@ -183,9 +183,9 @@
         if (document.getElementById('last-name')) document.getElementById('last-name').value = user.last_name || '';
         if (document.getElementById('display-name')) document.getElementById('display-name').value = user.display_name || '';
         if (document.getElementById('bio')) document.getElementById('bio').value = user.bio || '';
-        if (accountEmail) accountEmail.textContent = user.email || 'â€”';
+        if (accountEmail) accountEmail.textContent = user.email || '—';
         if (accountPhone) accountPhone.textContent = user.phone_verified ? 'Verified' : 'Not verified';
-        if (accountCountry) accountCountry.textContent = user.country || 'â€”';
+        if (accountCountry) accountCountry.textContent = user.country || '—';
         if (accountLanguage) accountLanguage.textContent = user.language || 'English';
         if (accountCurrency) accountCurrency.textContent = user.currency || 'NGN';
         if (accountTimezone) accountTimezone.textContent = user.timezone || 'Africa/Lagos';

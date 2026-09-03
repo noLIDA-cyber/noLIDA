@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — Payment Settings</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA � Payment Settings</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="settings">
@@ -42,7 +42,7 @@
           <p style="font-size: var(--text-sm); color: var(--theme-text-secondary); margin-bottom: 1.25rem;">Add or remove payment methods.</p>
           <div id="payment-methods">
             <div class="empty-state">
-              <div class="empty-state__icon">💳</div>
+              <div class="empty-state__icon">??</div>
               <p class="empty-state__title">No payment methods</p>
               <p class="empty-state__description">Add a payment method to get started.</p>
             </div>
@@ -62,7 +62,7 @@
   </main>
 
     <script src="/config.js"></script>
-<script type="module" src="/js/app.js?v=17"></script>
+<script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { apiGet, apiPost, apiDelete, apiPatch, isAuthenticated } from '/js/api.js';
 
@@ -108,7 +108,7 @@
       if (methods.length === 0) {
         paymentMethodsContainer.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state__icon">💳</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No payment methods</p>
             <p class="empty-state__description">Add a payment method to get started.</p>
           </div>`;
@@ -120,10 +120,10 @@
           ${methods.map(m => `
             <div class="card" style="padding: 1rem; border: 1px solid var(--theme-border); background: var(--theme-card-bg); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
               <div style="display: flex; align-items: center; gap: 1rem;">
-                <div style="font-size: 1.5rem;">${m.type === 'card' ? '💳' : m.type === 'bank_account' ? '🏦' : '📱'}</div>
+                <div style="font-size: 1.5rem;">${m.type === 'card' ? '??' : m.type === 'bank_account' ? '??' : '??'}</div>
                 <div>
                   <p style="font-weight: var(--weight-medium); color: var(--theme-text-primary); font-size: var(--text-sm);">
-                    ${m.brand ? m.brand.toUpperCase() : m.type} ${m.last_four ? `•••• ${m.last_four}` : ''}
+                    ${m.brand ? m.brand.toUpperCase() : m.type} ${m.last_four ? `���� ${m.last_four}` : ''}
                   </p>
                   <p style="font-size: var(--text-xs); color: var(--theme-text-tertiary);">
                     ${m.is_default ? '<span class="badge badge--success">Default</span>' : ''}
@@ -174,7 +174,7 @@
           <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
               <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Payment Method</h3>
-              <button class="btn btn--ghost btn--sm" id="close-payment-modal" style="color: var(--theme-text-secondary);">✕</button>
+              <button class="btn btn--ghost btn--sm" id="close-payment-modal" style="color: var(--theme-text-secondary);">?</button>
             </div>
             <form id="payment-method-form">
               <div class="form-group">

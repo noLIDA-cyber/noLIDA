@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — Book Service</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA � Book Service</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="book-new">
@@ -40,7 +40,7 @@
   </main>
 
     <script src="/config.js"></script>
-<script type="module" src="/js/app.js?v=17"></script>
+<script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { apiGet, apiPost, isAuthenticated } from '/js/api.js';
 
@@ -77,7 +77,7 @@
       if (!listingId) {
         container.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state__icon">😕</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No listing selected</p>
             <p class="empty-state__description">Please select a service to book.</p>
             <a href="/search" class="btn btn--primary" style="margin-top: 1rem;">Browse Services</a>
@@ -102,9 +102,9 @@
 
     const renderBookingForm = (listing, availableDates) => {
       const priceDisplay = listing.pricing_type === 'hourly' && listing.base_price
-        ? `₦${Number(listing.base_price).toLocaleString()} / hour`
+        ? `?${Number(listing.base_price).toLocaleString()} / hour`
         : listing.base_price
-        ? `₦${Number(listing.base_price).toLocaleString()}`
+        ? `?${Number(listing.base_price).toLocaleString()}`
         : 'Contact for price';
 
       container.innerHTML = `
@@ -113,7 +113,7 @@
             <div class="avatar">${listing.business_name ? listing.business_name[0] : '?'}</div>
             <div>
               <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">${listing.title}</h1>
-              <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${listing.business_name || listing.provider_name || 'Independent Provider'} · ${listing.category_name || 'General'}</p>
+              <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${listing.business_name || listing.provider_name || 'Independent Provider'} � ${listing.category_name || 'General'}</p>
             </div>
           </div>
           <p style="color: var(--theme-text-secondary); line-height: var(--leading-relaxed); margin-bottom: 1rem;">${listing.description || 'No description provided.'}</p>
@@ -125,7 +125,7 @@
             <label class="form-label form-label--required" for="booking-date">Select Date</label>
             <select id="booking-date" class="form-input" required style="background: var(--theme-input-bg); border-color: var(--theme-input-border); color: var(--theme-input-text);">
               <option value="">Choose a date</option>
-              ${availableDates.filter(d => d.available).map(d => `<option value="${d.date}">${d.day} — ${new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</option>`).join('')}
+              ${availableDates.filter(d => d.available).map(d => `<option value="${d.date}">${d.day} � ${new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</option>`).join('')}
             </select>
           </div>
 

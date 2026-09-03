@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — My Business</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA � My Business</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="provider">
@@ -75,7 +75,7 @@
       });
     }
   </script>
-  <script type="module" src="/js/app.js?v=17"></script>
+  <script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { isAuthenticated, apiGet, apiPost, apiPatch, apiDelete } from '/js/api.js';
     import { showToast } from '/js/app.js';
@@ -170,7 +170,7 @@
           </div>
           ${recentBookings.length === 0 ? `
             <div class="empty-state">
-              <div class="empty-state__icon">📅</div>
+              <div class="empty-state__icon">??</div>
               <p class="empty-state__title">No upcoming appointments</p>
               <p class="empty-state__description">Confirmed bookings will appear here.</p>
             </div>
@@ -213,7 +213,7 @@
         </div>
         ${listings.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state__icon">📦</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No services yet</p>
             <p class="empty-state__description">Create your first service to start receiving bookings.</p>
           </div>
@@ -254,7 +254,7 @@
         </div>
         ${slots.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state__icon">🕐</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No availability set</p>
             <p class="empty-state__description">Set your weekly availability to start accepting bookings.</p>
           </div>
@@ -318,7 +318,7 @@
             <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                 <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Availability</h3>
-                <button class="btn btn--ghost btn--sm" id="close-avail-modal" style="color: var(--theme-text-secondary);">✕</button>
+                <button class="btn btn--ghost btn--sm" id="close-avail-modal" style="color: var(--theme-text-secondary);">?</button>
               </div>
               <form id="availability-form">
                 <div class="form-group">
@@ -403,7 +403,7 @@
         <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Bookings</h2>
         ${bookings.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state__icon">📅</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No bookings yet</p>
             <p class="empty-state__description">Bookings will appear here once customers start booking your services.</p>
           </div>
@@ -524,7 +524,7 @@
       content.innerHTML = `
         <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Customers</h2>
         <div class="empty-state">
-          <div class="empty-state__icon">👥</div>
+          <div class="empty-state__icon">??</div>
           <p class="empty-state__title">Customer management coming soon</p>
           <p class="empty-state__description">You'll be able to view and manage your customers here.</p>
         </div>
@@ -542,7 +542,7 @@
         </div>
         ${locations.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state__icon">📍</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No locations yet</p>
             <p class="empty-state__description">Add your business locations to help customers find you.</p>
           </div>
@@ -596,7 +596,7 @@
             <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                 <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Location</h3>
-                <button class="btn btn--ghost btn--sm" id="close-location-modal" style="color: var(--theme-text-secondary);">✕</button>
+                <button class="btn btn--ghost btn--sm" id="close-location-modal" style="color: var(--theme-text-secondary);">?</button>
               </div>
               <form id="location-form">
                 <div class="form-group">
@@ -673,7 +673,7 @@
           content.innerHTML = `
             <h2 style="font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin-bottom: 1rem;">Staff & Roles</h2>
             <div class="empty-state">
-              <div class="empty-state__icon">🏢</div>
+              <div class="empty-state__icon">??</div>
               <p class="empty-state__title">No organization yet</p>
               <p class="empty-state__description">Create an organization to manage staff.</p>
             </div>
@@ -692,7 +692,7 @@
           </div>
           ${members.length === 0 ? `
             <div class="empty-state">
-              <div class="empty-state__icon">👥</div>
+              <div class="empty-state__icon">??</div>
               <p class="empty-state__title">No staff members yet</p>
               <p class="empty-state__description">Add staff members to your organization.</p>
             </div>
@@ -763,7 +763,7 @@
               <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; background: var(--theme-card-bg); border-color: var(--theme-border);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                   <h3 style="font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--theme-text-primary); margin: 0;">Add Staff Member</h3>
-                  <button class="btn btn--ghost btn--sm" id="close-staff-modal" style="color: var(--theme-text-secondary);">✕</button>
+                  <button class="btn btn--ghost btn--sm" id="close-staff-modal" style="color: var(--theme-text-secondary);">?</button>
                 </div>
                 <form id="staff-form">
                   <div class="form-group">
@@ -831,7 +831,7 @@
         </div>
         ${daily.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state__icon">📊</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">No analytics data yet</p>
             <p class="empty-state__description">Analytics will appear here once you have transactions.</p>
           </div>

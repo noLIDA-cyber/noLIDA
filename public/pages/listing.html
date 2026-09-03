@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>noLIDA — Listing</title>
-  <link rel="stylesheet" href="/css/variables.css?v=17">
-  <link rel="stylesheet" href="/css/theme.css?v=17">
-  <link rel="stylesheet" href="/css/reset.css?v=17">
-  <link rel="stylesheet" href="/css/base.css?v=17">
-  <link rel="stylesheet" href="/css/components.css?v=17">
-  <link rel="stylesheet" href="/css/utilities.css?v=17">
+  <title>noLIDA � Listing</title>
+  <link rel="stylesheet" href="/css/variables.css?v=18">
+  <link rel="stylesheet" href="/css/theme.css?v=18">
+  <link rel="stylesheet" href="/css/reset.css?v=18">
+  <link rel="stylesheet" href="/css/base.css?v=18">
+  <link rel="stylesheet" href="/css/components.css?v=18">
+  <link rel="stylesheet" href="/css/utilities.css?v=18">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="listing">
@@ -40,7 +40,7 @@
   </main>
 
     <script src="/config.js"></script>
-<script type="module" src="/js/app.js?v=17"></script>
+<script type="module" src="/js/app.js?v=18"></script>
   <script type="module">
     import { apiGet } from '/js/api.js';
 
@@ -52,7 +52,7 @@
       if (!listing) {
         container.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state__icon">😕</div>
+            <div class="empty-state__icon">??</div>
             <p class="empty-state__title">Listing not found</p>
             <p class="empty-state__description">This listing may have been removed or is no longer active.</p>
           </div>`;
@@ -60,11 +60,11 @@
       }
 
       const priceDisplay = listing.pricing_type === 'fixed' && listing.base_price
-        ? `₦${Number(listing.base_price).toLocaleString()}`
+        ? `?${Number(listing.base_price).toLocaleString()}`
         : listing.pricing_type === 'range' && listing.min_price && listing.max_price
-        ? `₦${Number(listing.min_price).toLocaleString()} - ₦${Number(listing.max_price).toLocaleString()}`
+        ? `?${Number(listing.min_price).toLocaleString()} - ?${Number(listing.max_price).toLocaleString()}`
         : listing.pricing_type === 'hourly'
-        ? `₦${Number(listing.base_price).toLocaleString()} / hour`
+        ? `?${Number(listing.base_price).toLocaleString()} / hour`
         : 'Contact for price';
 
       container.innerHTML = `
@@ -73,7 +73,7 @@
             <div class="avatar">${listing.business_name ? listing.business_name[0] : '?'}</div>
             <div>
               <h1 style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--theme-text-primary); margin: 0;">${listing.title}</h1>
-              <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${listing.business_name || listing.provider_name || 'Independent Provider'} · ${listing.category_name || 'General'}</p>
+              <p style="font-size: var(--text-sm); color: var(--theme-text-tertiary); margin: 0;">${listing.business_name || listing.provider_name || 'Independent Provider'} � ${listing.category_name || 'General'}</p>
             </div>
           </div>
           <p style="color: var(--theme-text-secondary); line-height: var(--leading-relaxed); margin-bottom: 1.5rem;">${listing.description || 'No description provided.'}</p>

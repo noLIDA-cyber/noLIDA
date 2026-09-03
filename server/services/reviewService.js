@@ -32,15 +32,18 @@ const createReview = async (customerId, providerId, data) => {
   }
 
   const result = await query(
-    'INSERT INTO reviews (transaction_id, customer_id, provider_id, organization_id, rating, title, content) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-    [transactionId, customerId, providerId, organizationId || null, rating, title || null, content]
+    'INSERT INTO reviews (transaction_id, customer_id, provider_id, organization_id, rating, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+    [transactionId, customerId, providerId, organizationId || null, rating, title || null, content, 'pending']
   );
 
   return result.rows[0];
 };
 
-const getReview = async (reviewId) => {
-  const result = await query('SELECT * FROM reviews WHERE id = $1', [reviewId]);
+const getReview = async (reviewId, includeAllStatuses = false) => {
+  const sql = includeAllStatuses
+    ? 'SELECT * FROM reviews WHERE id = $1'
+    : "SELECT * FROM reviews WHERE id = $1 AND status = 'published'";
+  const result = await query(sql, [reviewId]);
   if (result.rows.length === 0) {
     throw new AppError('Review not found', 404);
   }
@@ -48,11 +51,18 @@ const getReview = async (reviewId) => {
 };
 
 const listReviews = async (filters = {}) => {
-  const { providerId, customerId, page = 1, limit = 20 } = filters;
+  const { providerId, customerId, status, page = 1, limit = 20 } = filters;
   const offset = (page - 1) * limit;
   const conditions = [];
   const values = [];
   let index = 1;
+
+  // Public callers don't pass a status. Default to 'published'.
+  const effectiveStatus = status || 'published';
+
+  conditions.push(`status = $${index}`);
+  values.push(effectiveStatus);
+  index++;
 
   if (providerId) {
     conditions.push(`provider_id = $${index}`);
@@ -66,7 +76,7 @@ const listReviews = async (filters = {}) => {
     index++;
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   const result = await query(
     `SELECT * FROM reviews ${whereClause} ORDER BY created_at DESC LIMIT $${index} OFFSET $${index + 1}`,
@@ -80,6 +90,59 @@ const listReviews = async (filters = {}) => {
     data: result.rows,
     pagination: { total, page, limit, pages: Math.ceil(total / limit) },
   };
+};
+
+const listPendingReviews = async (page = 1, limit = 20) => {
+  const offset = (page - 1) * limit;
+  const result = await query(
+    `SELECT r.*, u.email as customer_email, p.display_name as customer_name,
+            pu.email as provider_email, pp.display_name as provider_name
+     FROM reviews r
+     JOIN users u ON u.id = r.customer_id
+     LEFT JOIN profiles p ON p.user_id = r.customer_id
+     JOIN users pu ON pu.id = r.provider_id
+     LEFT JOIN profiles pp ON pp.user_id = r.provider_id
+     WHERE r.status = 'pending'
+     ORDER BY r.created_at ASC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+
+  const countResult = await query("SELECT COUNT(*) FROM reviews WHERE status = 'pending'");
+  const total = parseInt(countResult.rows[0].count);
+
+  return {
+    data: result.rows,
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+  };
+};
+
+const moderateReview = async (adminId, reviewId, action, notes = null) => {
+  const allowed = { approve: 'published', reject: 'hidden' };
+  if (!allowed[action]) {
+    throw new AppError(`Invalid action. Allowed: ${Object.keys(allowed).join(', ')}`, 400);
+  }
+  const newStatus = allowed[action];
+
+  const reviewResult = await query('SELECT id, status FROM reviews WHERE id = $1', [reviewId]);
+  if (reviewResult.rows.length === 0) {
+    throw new AppError('Review not found', 404);
+  }
+
+  await query(
+    `UPDATE reviews
+     SET status = $1, reviewed_by = $2, reviewed_at = NOW(), moderation_notes = $3, updated_at = NOW()
+     WHERE id = $4 RETURNING *`,
+    [newStatus, adminId, notes || null, reviewId]
+  );
+
+  await query(
+    `INSERT INTO audit_logs (actor_id, action, target_type, target_id, changes)
+     VALUES ($1, $2, 'review', $3, $4)`,
+    [adminId, `review_${action}`, reviewId, JSON.stringify({ new_status: newStatus, notes })]
+  );
+
+  return await getReview(reviewId, true);
 };
 
 const updateReview = async (reviewId, customerId, updates) => {
@@ -118,7 +181,7 @@ const updateReview = async (reviewId, customerId, updates) => {
 
   await query(`UPDATE reviews SET ${reviewUpdates.join(', ')} WHERE id = $${index}`, reviewValues);
 
-  return getReview(reviewId);
+  return getReview(reviewId, true);
 };
 
 const deleteReview = async (reviewId, customerId) => {
@@ -153,6 +216,8 @@ module.exports = {
   createReview,
   getReview,
   listReviews,
+  listPendingReviews,
+  moderateReview,
   updateReview,
   deleteReview,
   getProviderRating,
