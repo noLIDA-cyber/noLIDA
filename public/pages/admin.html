@@ -33,6 +33,14 @@
 
   <main class="page">
     <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; border-bottom: 1px solid var(--theme-border);">
+        <button class="btn btn--ghost btn--sm admin-tab" data-tab="users" style="color: var(--theme-text-secondary); white-space: nowrap;">Users</button>
+        <button class="btn btn--ghost btn--sm admin-tab" data-tab="auth-codes" style="color: var(--theme-text-secondary); white-space: nowrap;">Authorization Codes</button>
+        <button class="btn btn--ghost btn--sm admin-tab" data-tab="business-approvals" style="color: var(--theme-text-secondary); white-space: nowrap;">Business Approvals</button>
+        <button class="btn btn--ghost btn--sm admin-tab" data-tab="risk" style="color: var(--theme-text-secondary); white-space: nowrap;">Risk</button>
+        <button class="btn btn--ghost btn--sm admin-tab" data-tab="audit" style="color: var(--theme-text-secondary); white-space: nowrap;">Audit</button>
+        <button class="btn btn--ghost btn--sm admin-tab" data-tab="fees" style="color: var(--theme-text-secondary); white-space: nowrap;">Fees</button>
+      </div>
       <div id="admin-content">
         <div class="loading-spinner" style="margin: 2rem auto;"></div>
       </div>

@@ -51,8 +51,22 @@ export const initAdminPage = async () => {
 
   let currentTab = 'users';
 
+  const setActiveTab = (tab) => {
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      const isActive = btn.dataset.tab === tab;
+      btn.classList.toggle('btn--primary', isActive);
+      btn.classList.toggle('btn--ghost', !isActive);
+      btn.style.color = isActive ? 'var(--color-white)' : 'var(--theme-text-secondary)';
+    });
+  };
+
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.addEventListener('click', () => loadTab(btn.dataset.tab));
+  });
+
   const loadTab = async (tab) => {
     currentTab = tab;
+    setActiveTab(tab);
     container.innerHTML = '<div class="loading-spinner" style="margin: 2rem auto;"></div>';
 
     try {
@@ -79,6 +93,8 @@ export const initAdminPage = async () => {
       container.innerHTML = `<div class="alert alert--danger">${err.message}</div>`;
     }
   };
+
+  loadTab('users');
 
   const renderUsers = (users, pagination) => {
     container.innerHTML = `
