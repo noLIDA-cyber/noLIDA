@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>noLIDA — List Your Business</title>
-  <link rel="stylesheet" href="/css/variables.css?v=18">
-  <link rel="stylesheet" href="/css/theme.css?v=18">
-  <link rel="stylesheet" href="/css/reset.css?v=18">
-  <link rel="stylesheet" href="/css/base.css?v=18">
-  <link rel="stylesheet" href="/css/components.css?v=18">
-  <link rel="stylesheet" href="/css/utilities.css?v=18">
+  <link rel="stylesheet" href="/css/variables.css?v=19">
+  <link rel="stylesheet" href="/css/theme.css?v=19">
+  <link rel="stylesheet" href="/css/reset.css?v=19">
+  <link rel="stylesheet" href="/css/base.css?v=19">
+  <link rel="stylesheet" href="/css/components.css?v=19">
+  <link rel="stylesheet" href="/css/utilities.css?v=19">
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 </head>
 <body data-page="list-business">
@@ -100,7 +100,7 @@
   </main>
 
     <script src="/config.js"></script>
-<script type="module" src="/js/app.js?v=18"></script>
+<script type="module" src="/js/app.js?v=19"></script>
   <script type="module">
     import { isAuthenticated, apiGet, apiPost } from '/js/api.js';
 
@@ -227,14 +227,30 @@
 
         try {
           const formData = new FormData(businessForm);
+          const businessPhone = formData.get('businessPhone');
+          const businessEmail = formData.get('businessEmail');
+          const website = formData.get('website');
+          const description = formData.get('description');
+          const locationText = formData.get('location');
+
+          // Build the JSONB fields explicitly as objects/arrays so the
+          // server never receives a plain string for a JSONB column.
+          const location = locationText ? { display: locationText } : {};
+          const pricing = {};
+          const socialMedia = {};
+          const businessHours = {};
+
           await apiPost('/business-submissions', {
             businessName: formData.get('businessName'),
-            categoryId: parseInt(formData.get('categoryId')),
-            description: formData.get('description'),
-            businessPhone: formData.get('businessPhone'),
-            businessEmail: formData.get('businessEmail'),
-            website: formData.get('website'),
-            location: formData.get('location'),
+            categoryId: parseInt(formData.get('categoryId'), 10),
+            description: description || null,
+            businessPhone: businessPhone || null,
+            businessEmail: businessEmail || null,
+            website: website || null,
+            location,
+            pricing,
+            socialMedia,
+            businessHours,
           });
           showToast('Business submitted for review', 'success');
           businessForm.reset();
