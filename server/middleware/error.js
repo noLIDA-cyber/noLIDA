@@ -38,11 +38,15 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === '22P02' || /invalid input syntax/i.test(err.message || '')) {
     statusCode = HTTP_STATUS.BAD_REQUEST;
     errorCode = 'invalid_value_format';
-    message = 'Invalid value format for one of the fields. Please check your input.';
+    // Build a detailed message with the full Postgres context so we
+    // can identify the failing column and value from the browser.
+    const parts = [err.message];
+    if (err.detail) parts.push(`detail: ${err.detail}`);
+    if (err.hint) parts.push(`hint: ${err.hint}`);
+    if (err.position) parts.push(`position: ${err.position}`);
+    if (err.where) parts.push(`where: ${err.where}`);
+    message = parts.join(' | ');
     isOperational = true;
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('DB VALUE FORMAT ERROR:', { original: err.message, hint: err.hint, detail: err.detail, position: err.position });
-    }
   }
 
   if (err.code === '23505') {
