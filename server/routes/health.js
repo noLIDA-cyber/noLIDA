@@ -7,6 +7,7 @@ router.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: process.env.API_VERSION || 'v1',
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown',
   });
 });
 
