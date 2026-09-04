@@ -35,6 +35,16 @@ const errorHandler = (err, req, res, next) => {
     isOperational = true;
   }
 
+  if (err.code === '22P02' || /invalid input syntax/i.test(err.message || '')) {
+    statusCode = HTTP_STATUS.BAD_REQUEST;
+    errorCode = 'invalid_value_format';
+    message = 'Invalid value format for one of the fields. Please check your input.';
+    isOperational = true;
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('DB VALUE FORMAT ERROR:', { original: err.message, hint: err.hint, detail: err.detail, position: err.position });
+    }
+  }
+
   if (err.code === '23505') {
     // PostgreSQL unique constraint violation
     statusCode = HTTP_STATUS.CONFLICT;
