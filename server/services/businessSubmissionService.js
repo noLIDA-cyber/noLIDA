@@ -185,7 +185,7 @@ const listBusinessSubmissions = async (filters = {}) => {
     index++;
   }
 
-  sql += ` ORDER BY bs.created_at DESC LIMIT $${index} OFFSET ${index + 1}`;
+  sql += ` ORDER BY bs.created_at DESC LIMIT $${index} OFFSET $${index + 1}`;
   params.push(limit, offset);
 
   if (process.env.NODE_ENV !== 'production') {
