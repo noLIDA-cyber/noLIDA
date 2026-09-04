@@ -100,6 +100,9 @@ const errorHandler = (err, req, res, next) => {
   // Send standardized error response
   if (statusCode >= 500) {
     console.error('SERVER ERROR:', { code: statusCode, message, stack: err.stack?.split('\n').slice(0, 4).join(' | ') });
+    if (process.env.NODE_ENV === 'production' && !message.includes('| sql:') && !message.includes('| params:')) {
+      message = `${message} | ${(err.stack || '').split('\n').slice(0, 3).join(' | ').substring(0, 500)}`;
+    }
   }
   sendError(res, message, statusCode, errorCode, details);
 };
