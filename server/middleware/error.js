@@ -98,6 +98,9 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Send standardized error response
+  if (statusCode >= 500) {
+    console.error('SERVER ERROR:', { code: statusCode, message, stack: err.stack?.split('\n').slice(0, 4).join(' | ') });
+  }
   sendError(res, message, statusCode, errorCode, details);
 };
 
