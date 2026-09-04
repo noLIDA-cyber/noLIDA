@@ -14,8 +14,12 @@ const createBusinessSubmission = async (userId, submissionData) => {
     });
   }
 
-  if (!businessName || !categoryId) {
-    throw new AppError('Business name and category are required', 400);
+  if (!businessName) {
+    throw new AppError('Business name is required', 400);
+  }
+  const safeCategoryId = parseInt(categoryId, 10);
+  if (!Number.isFinite(safeCategoryId) || safeCategoryId <= 0) {
+    throw new AppError('A valid category is required', 400);
   }
 
   if (authorizationCodeId) {
@@ -39,19 +43,21 @@ const createBusinessSubmission = async (userId, submissionData) => {
   }
 
   const toJsonb = (v, fallback) => {
-    if (v === null || v === undefined) return fallback;
+    if (v === null || v === undefined) return JSON.stringify(fallback);
     if (typeof v === 'string') {
-      try { return JSON.parse(v); } catch { return fallback; }
+      const trimmed = v.trim();
+      if (!trimmed) return JSON.stringify(fallback);
+      try { return JSON.stringify(JSON.parse(trimmed)); } catch { return JSON.stringify(fallback); }
     }
-    if (typeof v === 'object') return v;
-    return fallback;
+    if (typeof v === 'object') return JSON.stringify(v);
+    return JSON.stringify(fallback);
   };
 
   const result = await query(
     `INSERT INTO business_submissions
      (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
-    [userId, authorizationCodeId || null, businessName, categoryId, description || null, toJsonb(services, []), toJsonb(products, []), toJsonb(pricing, {}), businessPhone || null, businessEmail || null, website || null, toJsonb(socialMedia, {}), toJsonb(location, {}), toJsonb(serviceAreas, []), toJsonb(businessHours, {}), toJsonb(photos, []), logoUrl || null, toJsonb(portfolio, []), toJsonb(documents, []), toJsonb(verificationData, {}), 'pending_review']
+    [userId, authorizationCodeId || null, businessName, safeCategoryId, description || null, toJsonb(services, []), toJsonb(products, []), toJsonb(pricing, {}), businessPhone || null, businessEmail || null, website || null, toJsonb(socialMedia, {}), toJsonb(location, {}), toJsonb(serviceAreas, []), toJsonb(businessHours, {}), toJsonb(photos, []), logoUrl || null, toJsonb(portfolio, []), toJsonb(documents, []), toJsonb(verificationData, {}), 'pending_review']
   );
 
   if (process.env.NODE_ENV !== 'production') {
