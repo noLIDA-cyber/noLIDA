@@ -133,6 +133,7 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/notifications`, notificationRou
 app.use(`/api/${process.env.API_VERSION || 'v1'}/upload`, uploadRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/authorization-codes`, authorizationCodeRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/business-submissions`, businessSubmissionRoutes);
+console.log('[boot] mounted /api/v1/business-submissions');
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/index.html'));
