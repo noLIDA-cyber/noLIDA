@@ -190,7 +190,14 @@ const listBusinessSubmissions = async (filters = {}) => {
 
   const result = await query(sql, params);
 
-  const countResult = await query('SELECT COUNT(*) FROM business_submissions WHERE 1=1' + (status ? ' AND status = $1' : '') + (userId ? ' AND user_id = $2' : ''), status && userId ? [status, userId] : status ? [status] : userId ? [userId] : []);
+  const countParams = [];
+  let countSql = 'SELECT COUNT(*) FROM business_submissions WHERE 1=1';
+  if (status) { countSql += ' AND status = $1'; countParams.push(status); }
+  if (userId) {
+    countSql += ` AND user_id = $${countParams.length + 1}`;
+    countParams.push(userId);
+  }
+  const countResult = await query(countSql, countParams);
   const total = parseInt(countResult.rows[0].count);
 
   return {
