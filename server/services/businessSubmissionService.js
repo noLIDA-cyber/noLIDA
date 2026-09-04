@@ -28,11 +28,19 @@ const createBusinessSubmission = async (userId, submissionData) => {
     throw new AppError('You already have a pending business submission', 409);
   }
 
+  const toJsonb = (v, fallback) => {
+    if (v === null || v === undefined) return fallback;
+    if (typeof v === 'string') {
+      try { return JSON.parse(v); } catch { return fallback; }
+    }
+    return v;
+  };
+
   const result = await query(
-    `INSERT INTO business_submissions 
+    `INSERT INTO business_submissions
      (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
-    [userId, authorizationCodeId || null, businessName, categoryId, description || null, services || [], products || [], pricing || {}, businessPhone || null, businessEmail || null, website || null, socialMedia || {}, location || {}, serviceAreas || [], businessHours || {}, photos || [], logoUrl || null, portfolio || [], documents || [], verificationData || {}, 'pending_review']
+    [userId, authorizationCodeId || null, businessName, categoryId, description || null, toJsonb(services, []), toJsonb(products, []), toJsonb(pricing, {}), businessPhone || null, businessEmail || null, website || null, toJsonb(socialMedia, {}), toJsonb(location, {}), toJsonb(serviceAreas, []), toJsonb(businessHours, {}), toJsonb(photos, []), logoUrl || null, toJsonb(portfolio, []), toJsonb(documents, []), toJsonb(verificationData, {}), 'pending_review']
   );
 
   await query(
