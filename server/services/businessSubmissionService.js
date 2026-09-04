@@ -188,6 +188,9 @@ const listBusinessSubmissions = async (filters = {}) => {
   sql += ` ORDER BY bs.created_at DESC LIMIT $${index} OFFSET ${index + 1}`;
   params.push(limit, offset);
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[listBusinessSubmissions] main sql:', sql, 'params:', params);
+  }
   const result = await query(sql, params);
 
   const countParams = [];
@@ -197,7 +200,15 @@ const listBusinessSubmissions = async (filters = {}) => {
     countSql += ` AND user_id = $${countParams.length + 1}`;
     countParams.push(userId);
   }
-  const countResult = await query(countSql, countParams);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[listBusinessSubmissions] count sql:', countSql, 'params:', countParams);
+  }
+  let countResult;
+  try {
+    countResult = await query(countSql, countParams);
+  } catch (err) {
+    throw new AppError(`Count query failed: ${err.message} | sql: ${countSql} | params: ${JSON.stringify(countParams)}`, 500);
+  }
   const total = parseInt(countResult.rows[0].count);
 
   return {
