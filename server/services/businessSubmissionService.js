@@ -43,22 +43,93 @@ const createBusinessSubmission = async (userId, submissionData) => {
   }
 
   const toJsonb = (v, fallback) => {
-    if (v === null || v === undefined) return JSON.stringify(fallback);
-    if (typeof v === 'string') {
-      const trimmed = v.trim();
-      if (!trimmed) return JSON.stringify(fallback);
-      try { return JSON.stringify(JSON.parse(trimmed)); } catch { return JSON.stringify(fallback); }
+    try {
+      if (v === null || v === undefined) return JSON.stringify(fallback);
+      if (typeof v === 'string') {
+        const trimmed = v.trim();
+        if (!trimmed) return JSON.stringify(fallback);
+        return JSON.stringify(JSON.parse(trimmed));
+      }
+      if (typeof v === 'object') return JSON.stringify(v);
+      return JSON.stringify(fallback);
+    } catch (e) {
+      return JSON.stringify(fallback);
     }
-    if (typeof v === 'object') return JSON.stringify(v);
-    return JSON.stringify(fallback);
   };
 
-  const result = await query(
-    `INSERT INTO business_submissions
-     (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
-    [userId, authorizationCodeId || null, businessName, safeCategoryId, description || null, toJsonb(services, []), toJsonb(products, []), toJsonb(pricing, {}), businessPhone || null, businessEmail || null, website || null, toJsonb(socialMedia, {}), toJsonb(location, {}), toJsonb(serviceAreas, []), toJsonb(businessHours, {}), toJsonb(photos, []), logoUrl || null, toJsonb(portfolio, []), toJsonb(documents, []), toJsonb(verificationData, {}), 'pending_review']
-  );
+  const values = [
+    userId,
+    authorizationCodeId || null,
+    businessName,
+    safeCategoryId,
+    description || null,
+    toJsonb(services, []),
+    toJsonb(products, []),
+    toJsonb(pricing, {}),
+    businessPhone || null,
+    businessEmail || null,
+    website || null,
+    toJsonb(socialMedia, {}),
+    toJsonb(location, {}),
+    toJsonb(serviceAreas, []),
+    toJsonb(businessHours, {}),
+    toJsonb(photos, []),
+    logoUrl || null,
+    toJsonb(portfolio, []),
+    toJsonb(documents, []),
+    toJsonb(verificationData, {}),
+    'pending_review',
+  ];
+
+  const columnNames = [
+    'user_id', 'authorization_code_id', 'business_name', 'category_id', 'description',
+    'services', 'products', 'pricing', 'business_phone', 'business_email', 'website',
+    'social_media', 'location', 'service_areas', 'business_hours', 'photos',
+    'logo_url', 'portfolio', 'documents', 'verification_data', 'status',
+  ];
+
+  let result;
+  try {
+    result = await query(
+      `INSERT INTO business_submissions
+       (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
+      values
+    );
+  } catch (err) {
+    if (err.code === '22P02' || /invalid input syntax/i.test(err.message || '')) {
+      const pos = parseInt(err.position, 10);
+      let badColumn = 'unknown';
+      let badValue = 'unknown';
+      if (Number.isFinite(pos) && pos > 0) {
+        let offset = 0;
+        for (let i = 0; i < values.length; i++) {
+          const v = values[i];
+          let str;
+          try { str = v === null || v === undefined ? 'null' : String(v); } catch { str = '?'; }
+          const paramPlaceholder = `$${i + 1}`;
+          const placeholderStart = err.position ? 0 : 0;
+          if (offset + str.length >= pos || err.message.includes(`${columnNames[i]}`)) {
+            badColumn = columnNames[i];
+            badValue = str.length > 200 ? str.slice(0, 200) + '...' : str;
+            break;
+          }
+          offset += str.length;
+        }
+        if (badColumn === 'unknown' && values.length > 0) {
+          badColumn = columnNames[Math.min(values.length - 1, Math.floor(pos / 10))];
+          badValue = String(values[Math.min(values.length - 1, Math.floor(pos / 10))]);
+        }
+      }
+      throw new AppError(
+        `Database rejected value for column "${badColumn}": ${err.message} | value: ${badValue}`,
+        400,
+        'db_value_format',
+        { column: badColumn, value: badValue, originalError: err.message, position: err.position }
+      );
+    }
+    throw err;
+  }
 
   if (process.env.NODE_ENV !== 'production') {
     console.log('business_submission inserted OK, id =', result.rows[0]?.id);
