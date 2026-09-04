@@ -13,6 +13,20 @@ router.post('/', authenticate, async (req, res, next) => {
   }
 });
 
+router.get('/', authenticate, async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const result = await listBusinessSubmissions({
+      page,
+      limit,
+    });
+    sendSuccess(res, result.data);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/me', authenticate, async (req, res, next) => {
   try {
     const result = await listBusinessSubmissions({ userId: req.user.id, limit: 50 });
