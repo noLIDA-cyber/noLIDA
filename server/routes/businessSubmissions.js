@@ -42,10 +42,12 @@ router.get('/:id/history', authenticate, async (req, res, next) => {
 
 router.patch('/:id/status', authenticate, async (req, res, next) => {
   try {
+    console.log('PATCH /business-submissions/:id/status hit', { id: req.params.id, body: req.body, user: req.user?.id });
     const { status, notes } = req.body;
     const submission = await updateBusinessSubmissionStatus(req.params.id, status, req.user.id, notes);
     sendSuccess(res, submission);
   } catch (error) {
+    console.error('PATCH /business-submissions/:id/status error:', error);
     next(error);
   }
 });
