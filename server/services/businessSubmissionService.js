@@ -191,7 +191,12 @@ const listBusinessSubmissions = async (filters = {}) => {
   if (process.env.NODE_ENV !== 'production') {
     console.log('[listBusinessSubmissions] main sql:', sql, 'params:', params);
   }
-  const result = await query(sql, params);
+  let result;
+  try {
+    result = await query(sql, params);
+  } catch (err) {
+    throw new AppError(`List query failed: ${err.message} | sql: ${sql} | params: ${JSON.stringify(params)} | index: ${index}`, 500);
+  }
 
   const countParams = [];
   let countSql = 'SELECT COUNT(*) FROM business_submissions WHERE 1=1';
