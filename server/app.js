@@ -36,7 +36,7 @@ const feeRoutes = require('./routes/fees');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
 const authorizationCodeRoutes = require('./routes/authorizationCodes');
-const businessSubmissionRoutes = require('./routes/businessSubmissions');
+const businessSubmissionRoutes = require('./routes/businessSubmissions'); // business-submissions
 
 require('./services/paymentGatewaySetup');
 
