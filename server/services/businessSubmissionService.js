@@ -4,6 +4,16 @@ const { AppError } = require('../middleware/error');
 const createBusinessSubmission = async (userId, submissionData) => {
   const { authorizationCodeId, businessName, categoryId, description, services, products, pricing, businessPhone, businessEmail, website, socialMedia, location, serviceAreas, businessHours, photos, logoUrl, portfolio, documents, verificationData } = submissionData;
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('business-submission payload types:', {
+      businessName: typeof businessName,
+      categoryId: typeof categoryId, categoryIdVal: categoryId,
+      location: typeof location, locationVal: location,
+      services: typeof services, servicesVal: services,
+      pricing: typeof pricing, pricingVal: pricing,
+    });
+  }
+
   if (!businessName || !categoryId) {
     throw new AppError('Business name and category are required', 400);
   }
@@ -33,7 +43,12 @@ const createBusinessSubmission = async (userId, submissionData) => {
     if (typeof v === 'string') {
       try { return JSON.parse(v); } catch { return fallback; }
     }
-    return v;
+    if (typeof v === 'object') return v;
+    return fallback;
+  };
+
+  const safeJsonb = (v, fallback) => {
+    try { return toJsonb(v, fallback); } catch { return fallback; }
   };
 
   const result = await query(
