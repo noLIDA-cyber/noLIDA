@@ -37,6 +37,7 @@ const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
 const authorizationCodeRoutes = require('./routes/authorizationCodes');
 const businessSubmissionRoutes = require('./routes/businessSubmissions'); // business-submissions
+console.log('[boot] businessSubmissionRoutes loaded, has', businessSubmissionRoutes.stack?.length || 0, 'routes');
 
 require('./services/paymentGatewaySetup');
 
