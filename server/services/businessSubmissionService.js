@@ -47,10 +47,6 @@ const createBusinessSubmission = async (userId, submissionData) => {
     return fallback;
   };
 
-  const safeJsonb = (v, fallback) => {
-    try { return toJsonb(v, fallback); } catch { return fallback; }
-  };
-
   const result = await query(
     `INSERT INTO business_submissions
      (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
@@ -58,10 +54,18 @@ const createBusinessSubmission = async (userId, submissionData) => {
     [userId, authorizationCodeId || null, businessName, categoryId, description || null, toJsonb(services, []), toJsonb(products, []), toJsonb(pricing, {}), businessPhone || null, businessEmail || null, website || null, toJsonb(socialMedia, {}), toJsonb(location, {}), toJsonb(serviceAreas, []), toJsonb(businessHours, {}), toJsonb(photos, []), logoUrl || null, toJsonb(portfolio, []), toJsonb(documents, []), toJsonb(verificationData, {}), 'pending_review']
   );
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('business_submission inserted OK, id =', result.rows[0]?.id);
+  }
+
   await query(
     'INSERT INTO approval_records (business_submission_id, admin_id, action, new_status) VALUES ($1, $2, $3, $4)',
     [result.rows[0].id, userId, 'submitted', 'pending_review']
   );
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('approval_record inserted OK');
+  }
 
   return result.rows[0];
 };
