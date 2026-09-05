@@ -65,6 +65,18 @@ const markAllAsRead = async (userId) => {
   return { message: 'All notifications marked as read' };
 };
 
+const createNotification = async (userId, { type, title, body, link = null, channel = 'in_app', data = {} }) => {
+  if (!userId) throw new AppError('userId is required', 400);
+  if (!title) throw new AppError('Notification title is required', 400);
+
+  const result = await query(
+    `INSERT INTO notifications (user_id, type, channel, title, body, data, read, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, FALSE, NOW()) RETURNING *`,
+    [userId, type || null, channel, title, body || null, JSON.stringify(data || {})]
+  );
+  return result.rows[0];
+};
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordReset,
@@ -76,4 +88,5 @@ module.exports = {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  createNotification,
 };

@@ -1,6 +1,7 @@
 const { query } = require('../config/database');
 const { AppError } = require('../middleware/error');
 const { sendSuccess, sendError } = require('../utils/response');
+const { createNotification } = require('./notificationService');
 
 const createReview = async (customerId, providerId, data) => {
   const { transactionId, rating, title, content, organizationId } = data;
@@ -35,6 +36,30 @@ const createReview = async (customerId, providerId, data) => {
     'INSERT INTO reviews (transaction_id, customer_id, provider_id, organization_id, rating, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
     [transactionId, customerId, providerId, organizationId || null, rating, title || null, content, 'pending']
   );
+
+  try {
+    const providerResult = await query('SELECT email FROM users WHERE id = $1', [providerId]);
+    const providerEmail = providerResult.rows[0]?.email || 'a provider';
+    const stars = '★'.repeat(Math.max(1, Math.min(5, parseInt(rating, 10) || 0)));
+    const admins = await query(
+      `SELECT u.id FROM users u
+       JOIN organization_members om ON om.user_id = u.id
+       JOIN role_permissions rp ON rp.role_id = om.role_id
+       JOIN permissions p ON p.id = rp.permission_id
+       WHERE p.slug = 'reviews.moderate' AND om.status = 'active'`
+    );
+    for (const admin of admins.rows) {
+      await createNotification(admin.id, {
+        type: 'review_pending',
+        title: `New review awaiting moderation (${stars})`,
+        body: `A ${rating}-star review was left for ${providerEmail}.`,
+        channel: 'in_app',
+        data: { link: '/admin', review_id: result.rows[0].id },
+      });
+    }
+  } catch (err) {
+    console.error('Failed to create review-pending notification:', err.message);
+  }
 
   return result.rows[0];
 };
@@ -139,8 +164,32 @@ const moderateReview = async (adminId, reviewId, action, notes = null) => {
   await query(
     `INSERT INTO audit_logs (actor_id, action, target_type, target_id, changes)
      VALUES ($1, $2, 'review', $3, $4)`,
-    [adminId, `review_${action}`, reviewId, { new_status: newStatus, notes }]
+    [adminId, `review_${action}`, reviewId, JSON.stringify({ new_status: newStatus, notes })]
   );
+
+  try {
+    const reviewRow = reviewResult.rows[0];
+    const stars = '★'.repeat(Math.max(1, Math.min(5, parseInt(reviewRow.rating, 10) || 0)));
+    if (action === 'approve') {
+      await createNotification(reviewRow.provider_id, {
+        type: 'review_approved',
+        title: `You received a new ${stars} review`,
+        body: reviewRow.title || 'A customer left a review for your business.',
+        channel: 'in_app',
+        data: { link: '/reviews', review_id: reviewId },
+      });
+    } else if (action === 'reject') {
+      await createNotification(reviewRow.customer_id, {
+        type: 'review_rejected',
+        title: 'Your review was not published',
+        body: notes ? `Reason: ${notes}` : 'Please review our community guidelines and resubmit.',
+        channel: 'in_app',
+        data: { link: '/reviews', review_id: reviewId },
+      });
+    }
+  } catch (err) {
+    console.error('Failed to create review moderation notification:', err.message);
+  }
 
   return await getReview(reviewId, true);
 };

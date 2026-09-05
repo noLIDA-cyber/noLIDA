@@ -1,5 +1,6 @@
 const { query } = require('../config/database');
 const { AppError } = require('../middleware/error');
+const { createNotification } = require('./notificationService');
 
 const createBusinessSubmission = async (userId, submissionData) => {
   const { authorizationCodeId, businessName, categoryId, description, services, products, pricing, businessPhone, businessEmail, website, socialMedia, location, serviceAreas, businessHours, photos, logoUrl, portfolio, documents, verificationData } = submissionData;
@@ -201,6 +202,34 @@ const updateBusinessSubmissionStatus = async (submissionId, newStatus, adminId, 
     'INSERT INTO audit_logs (actor_id, action, target_type, target_id, changes) VALUES ($1, $2, $3, $4, $5)',
     [adminId, `business_${newStatus}`, 'business_submission', submissionId, JSON.stringify({ previous_status: previousStatus, new_status: newStatus })]
   );
+
+  try {
+    const titles = {
+      approved: 'Your business has been approved!',
+      rejected: 'Your business application was not approved',
+      changes_requested: 'Changes requested on your business application',
+      suspended: 'Your business account has been suspended',
+      unpublished: 'Your business has been unpublished',
+    };
+    const bodies = {
+      approved: 'Your business is now live on noLIDA. Customers can find and book your services.',
+      rejected: notes ? `Reason: ${notes}` : 'Please contact support for details.',
+      changes_requested: notes || 'Please review the feedback and resubmit.',
+      suspended: 'Please contact support for more information.',
+      unpublished: 'Your listing has been removed from public search.',
+    };
+    if (titles[newStatus]) {
+      await createNotification(submission.user_id, {
+        type: `business_${newStatus}`,
+        title: titles[newStatus],
+        body: bodies[newStatus] || null,
+        channel: 'in_app',
+        data: { link: '/list-business', submission_id: submissionId, status: newStatus },
+      });
+    }
+  } catch (err) {
+    console.error('Failed to create business status notification:', err.message);
+  }
 
   return result.rows[0];
 };
