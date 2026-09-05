@@ -4,16 +4,6 @@ const { AppError } = require('../middleware/error');
 const createBusinessSubmission = async (userId, submissionData) => {
   const { authorizationCodeId, businessName, categoryId, description, services, products, pricing, businessPhone, businessEmail, website, socialMedia, location, serviceAreas, businessHours, photos, logoUrl, portfolio, documents, verificationData } = submissionData;
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('business-submission payload types:', {
-      businessName: typeof businessName,
-      categoryId: typeof categoryId, categoryIdVal: categoryId,
-      location: typeof location, locationVal: location,
-      services: typeof services, servicesVal: services,
-      pricing: typeof pricing, pricingVal: pricing,
-    });
-  }
-
   if (!businessName) {
     throw new AppError('Business name is required', 400);
   }
@@ -52,97 +42,22 @@ const createBusinessSubmission = async (userId, submissionData) => {
       }
       if (typeof v === 'object') return JSON.stringify(v);
       return JSON.stringify(fallback);
-    } catch (e) {
+    } catch {
       return JSON.stringify(fallback);
     }
   };
 
-  const values = [
-    userId,
-    authorizationCodeId || null,
-    businessName,
-    safeCategoryId,
-    description || null,
-    toJsonb(services, []),
-    toJsonb(products, []),
-    toJsonb(pricing, {}),
-    businessPhone || null,
-    businessEmail || null,
-    website || null,
-    toJsonb(socialMedia, {}),
-    toJsonb(location, {}),
-    toJsonb(serviceAreas, []),
-    toJsonb(businessHours, {}),
-    toJsonb(photos, []),
-    logoUrl || null,
-    toJsonb(portfolio, []),
-    toJsonb(documents, []),
-    toJsonb(verificationData, {}),
-    'pending_review',
-  ];
-
-  const columnNames = [
-    'user_id', 'authorization_code_id', 'business_name', 'category_id', 'description',
-    'services', 'products', 'pricing', 'business_phone', 'business_email', 'website',
-    'social_media', 'location', 'service_areas', 'business_hours', 'photos',
-    'logo_url', 'portfolio', 'documents', 'verification_data', 'status',
-  ];
-
-  let result;
-  try {
-    result = await query(
-      `INSERT INTO business_submissions
-       (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
-      values
-    );
-  } catch (err) {
-    if (err.code === '22P02' || /invalid input syntax/i.test(err.message || '')) {
-      const pos = parseInt(err.position, 10);
-      let badColumn = 'unknown';
-      let badValue = 'unknown';
-      if (Number.isFinite(pos) && pos > 0) {
-        let offset = 0;
-        for (let i = 0; i < values.length; i++) {
-          const v = values[i];
-          let str;
-          try { str = v === null || v === undefined ? 'null' : String(v); } catch { str = '?'; }
-          const paramPlaceholder = `$${i + 1}`;
-          const placeholderStart = err.position ? 0 : 0;
-          if (offset + str.length >= pos || err.message.includes(`${columnNames[i]}`)) {
-            badColumn = columnNames[i];
-            badValue = str.length > 200 ? str.slice(0, 200) + '...' : str;
-            break;
-          }
-          offset += str.length;
-        }
-        if (badColumn === 'unknown' && values.length > 0) {
-          badColumn = columnNames[Math.min(values.length - 1, Math.floor(pos / 10))];
-          badValue = String(values[Math.min(values.length - 1, Math.floor(pos / 10))]);
-        }
-      }
-      throw new AppError(
-        `Database rejected value for column "${badColumn}": ${err.message} | value: ${badValue}`,
-        400,
-        'db_value_format',
-        { column: badColumn, value: badValue, originalError: err.message, position: err.position }
-      );
-    }
-    throw err;
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('business_submission inserted OK, id =', result.rows[0]?.id);
-  }
+  const result = await query(
+    `INSERT INTO business_submissions
+     (user_id, authorization_code_id, business_name, category_id, description, services, products, pricing, business_phone, business_email, website, social_media, location, service_areas, business_hours, photos, logo_url, portfolio, documents, verification_data, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
+    [userId, authorizationCodeId || null, businessName, safeCategoryId, description || null, toJsonb(services, []), toJsonb(products, []), toJsonb(pricing, {}), businessPhone || null, businessEmail || null, website || null, toJsonb(socialMedia, {}), toJsonb(location, {}), toJsonb(serviceAreas, []), toJsonb(businessHours, {}), toJsonb(photos, []), logoUrl || null, toJsonb(portfolio, []), toJsonb(documents, []), toJsonb(verificationData, {}), 'pending_review']
+  );
 
   await query(
     'INSERT INTO approval_records (business_submission_id, admin_id, action, new_status) VALUES ($1, $2, $3, $4)',
     [result.rows[0].id, userId, 'submitted', 'pending_review']
   );
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('approval_record inserted OK');
-  }
 
   return result.rows[0];
 };
@@ -188,15 +103,7 @@ const listBusinessSubmissions = async (filters = {}) => {
   sql += ` ORDER BY bs.created_at DESC LIMIT $${index} OFFSET $${index + 1}`;
   params.push(limit, offset);
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[listBusinessSubmissions] main sql:', sql, 'params:', params);
-  }
-  let result;
-  try {
-    result = await query(sql, params);
-  } catch (err) {
-    throw new AppError(`List query failed: ${err.message} | sql: ${sql} | params: ${JSON.stringify(params)} | index: ${index}`, 500);
-  }
+  const result = await query(sql, params);
 
   const countParams = [];
   let countSql = 'SELECT COUNT(*) FROM business_submissions WHERE 1=1';
@@ -205,15 +112,7 @@ const listBusinessSubmissions = async (filters = {}) => {
     countSql += ` AND user_id = $${countParams.length + 1}`;
     countParams.push(userId);
   }
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[listBusinessSubmissions] count sql:', countSql, 'params:', countParams);
-  }
-  let countResult;
-  try {
-    countResult = await query(countSql, countParams);
-  } catch (err) {
-    throw new AppError(`Count query failed: ${err.message} | sql: ${countSql} | params: ${JSON.stringify(countParams)}`, 500);
-  }
+  const countResult = await query(countSql, countParams);
   const total = parseInt(countResult.rows[0].count);
 
   return {

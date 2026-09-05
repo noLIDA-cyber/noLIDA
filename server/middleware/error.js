@@ -38,14 +38,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === '22P02' || /invalid input syntax/i.test(err.message || '')) {
     statusCode = HTTP_STATUS.BAD_REQUEST;
     errorCode = 'invalid_value_format';
-    // Build a detailed message with the full Postgres context so we
-    // can identify the failing column and value from the browser.
-    const parts = [err.message];
-    if (err.detail) parts.push(`detail: ${err.detail}`);
-    if (err.hint) parts.push(`hint: ${err.hint}`);
-    if (err.position) parts.push(`position: ${err.position}`);
-    if (err.where) parts.push(`where: ${err.where}`);
-    message = parts.join(' | ');
+    message = 'Invalid value format for one of the fields. Please check your input.';
     isOperational = true;
   }
 
@@ -97,13 +90,6 @@ const errorHandler = (err, req, res, next) => {
     console.error('CRITICAL ERROR:', err);
   }
 
-  // Send standardized error response
-  if (statusCode >= 500) {
-    console.error('SERVER ERROR:', { code: statusCode, message, stack: err.stack?.split('\n').slice(0, 4).join(' | ') });
-    if (process.env.NODE_ENV === 'production' && !message.includes('| sql:') && !message.includes('| params:')) {
-      message = `${message} | ${(err.stack || '').split('\n').slice(0, 3).join(' | ').substring(0, 500)}`;
-    }
-  }
   sendError(res, message, statusCode, errorCode, details);
 };
 

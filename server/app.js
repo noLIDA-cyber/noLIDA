@@ -36,8 +36,7 @@ const feeRoutes = require('./routes/fees');
 const notificationRoutes = require('./routes/notifications');
 const uploadRoutes = require('./routes/upload');
 const authorizationCodeRoutes = require('./routes/authorizationCodes');
-const businessSubmissionRoutes = require('./routes/businessSubmissions'); // business-submissions
-console.log('[boot] businessSubmissionRoutes loaded, has', businessSubmissionRoutes.stack?.length || 0, 'routes');
+const businessSubmissionRoutes = require('./routes/businessSubmissions');
 
 require('./services/paymentGatewaySetup');
 
@@ -133,7 +132,6 @@ app.use(`/api/${process.env.API_VERSION || 'v1'}/notifications`, notificationRou
 app.use(`/api/${process.env.API_VERSION || 'v1'}/upload`, uploadRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/authorization-codes`, authorizationCodeRoutes);
 app.use(`/api/${process.env.API_VERSION || 'v1'}/business-submissions`, businessSubmissionRoutes);
-console.log('[boot] mounted /api/v1/business-submissions');
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/pages/index.html'));
@@ -282,4 +280,3 @@ if (process.env.VERCEL !== '1') {
 }
 
 module.exports = app;
-// last touched: 2026-09-04T16:10:00Z - force Railway redeploy

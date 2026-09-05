@@ -15,17 +15,11 @@ router.post('/', authenticate, async (req, res, next) => {
 
 router.get('/', authenticate, async (req, res, next) => {
   try {
-    console.log('[GET /business-submissions] hit by user', req.user?.id);
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 50;
-    const result = await listBusinessSubmissions({
-      page,
-      limit,
-    });
-    console.log('[GET /business-submissions] success, rows:', result.data?.length);
+    const result = await listBusinessSubmissions({ page, limit });
     sendSuccess(res, result.data);
   } catch (error) {
-    console.error('[GET /business-submissions] error:', error.message, '| sql hint:', error.sql, '| stack:', error.stack?.split('\n').slice(0, 3).join(' | '));
     next(error);
   }
 });
@@ -59,12 +53,10 @@ router.get('/:id/history', authenticate, async (req, res, next) => {
 
 router.patch('/:id/status', authenticate, async (req, res, next) => {
   try {
-    console.log('PATCH /business-submissions/:id/status hit', { id: req.params.id, body: req.body, user: req.user?.id });
     const { status, notes } = req.body;
     const submission = await updateBusinessSubmissionStatus(req.params.id, status, req.user.id, notes);
     sendSuccess(res, submission);
   } catch (error) {
-    console.error('PATCH /business-submissions/:id/status error:', error);
     next(error);
   }
 });
